@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FarmaVida Premium</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <header class="header">
+        <div class="container header-content">
+            <a href="#" class="logo"></span></a>
+
+            <div class="search-bar">
+                <input type="text" id="search-input" placeholder="Buscar en el catálogo...">
+                <button><i class='bx bx-search'></i></button>
+            </div>
+
+            <div class="user-actions">
+                <div class="icon-box" id="cart-icon">
+                    <i class='bx bx-cart-alt'></i>
+                    <span id="cart-count">0</span>
+                </div>
+                <div class="icon-box" id="orders-icon" title="Pedidos Pendientes">
+                    <i class='bx bx-package'></i>
+                </div>
+                <a class="icon-box" id="account"><i class='bx bx-user'></i> </a>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container hero-grid">
+            <div class="hero-text">
+                <h1></h1>
+                <p>
+                </p>
+                <!-- <button class="btn-primary">Comprar Ahora <i class='bx bx-right-arrow-alt'></i></button> -->
+                </div>
+            <div class="hero-image-container">
+                <img src="" class="hero-img" alt="Hero Image">
+            </div>
+        </div>
+    </section>
+
+    <section class="container categories-section">
+        <div class="category-item">
+            <div class="cat-icon"><i class='bx bx-capsule'></i></div>
+            <span>Medicinas</span>
+        </div>
+        <div class="category-item">
+            <div class="cat-icon"><i class='bx bx-sun'></i></div>
+            <span>Vitaminas</span>
+        </div>
+        <div class="category-item">
+            <div class="cat-icon"><i class='bx bx-face'></i></div>
+            <span>Cuidado Piel</span>
+        </div>
+        <div class="category-item">
+            <div class="cat-icon"><i class='bx bx-plus-medical'></i></div>
+            <span>Primeros</span>
+        </div>
+        
+    </section>
+
+    <section class="section container">
+    <div class="section-header">
+        <h2 class="section-title"></h2>
+        <div class="carousel-nav">
+            <button id="prevBtn"><i class='bx bx-chevron-left'></i></button>
+            <button id="nextBtn"><i class='bx bx-chevron-right'></i></button>
+        </div>
+    </div>
+
+    <div class="carousel-container">
+        <div class="carousel-track" id="bestseller-track">
+
+            
+        </div>
+    </div>
+</section>
+
+    <section class="section container">
+        <h2 class="section-title center">Explora Nuestro Catálogo</h2>
+        <div class="filters-container" id="category-filters-container">
+            <button class="filter-pill active" data-filter="all">Todos</button>
+            <button class="filter-pill" data-filter="medicamentos">Medicamentos</button>
+            <button class="filter-pill" data-filter="cuidado">Cuidado Personal</button>
+            <button class="filter-pill" data-filter="bebes">Bebés y Mamá</button>
+        </div>
+
+        <div class="products-grid" id="products-grid">
+            
+        </div>
+    </section>
+
+    <div class="cart-overlay" id="cart-overlay"></div>
+
+    <div class="cart-sidebar" id="cart-sidebar">
+        <div class="cart-header">
+            <h2>Mi Carrito</h2>
+            <span class="close-cart" id="close-cart"><i class='bx bx-x'></i></span>
+        </div>
+        <div class="cart-items" id="cart-items">
+            <div class="empty-cart-msg">
+                <i class='bx bx-shopping-bag'></i>
+                <p>Tu carrito está vacío</p>
+            </div>
+        </div>
+        <div class="cart-footer">
+            <div class="total-row">
+                <span>Total</span>
+                <span id="total-price">$0.00</span>
+            </div>
+            <button class="btn-checkout">Proceder al Pago</button>
+        </div>
+    </div>
+
+    <div class="account-sidebar" id="account-sidebar">
+        <div class="cart-header">
+            <h2>Mi Cuenta</h2>
+            <span class="close-cart" id="close-account"><i class='bx bx-x'></i></span>
+        </div>
+
+        <div class="account-content no-scroll-content">
+            
+            <div id="profile-view-mode">
+                <div class="profile-header">
+                    <div class="avatar-circle">
+                        <img id="display-avatar" src="" alt="Usuario">
+                    </div>
+                    <h3 class="user-name" id="display-name">Cargando...</h3>
+                </div>
+
+                <div class="profile-details">
+                    <div class="detail-item">
+                        <div class="detail-icon"><i class='bx bx-envelope'></i></div>
+                        <div class="detail-text">
+                            <label>Correo Electrónico</label>
+                            <p id="display-email">...</p>
+                        </div>
+                    </div>
+
+                    <div class="detail-item">
+                        <div class="detail-icon"><i class='bx bx-phone'></i></div>
+                        <div class="detail-text">
+                            <label>Teléfono</label>
+                            <p id="display-phone">...</p>
+                        </div>
+                    </div>
+
+                    <div class="detail-item">
+                        <div class="detail-icon"><i class='bx bx-map'></i></div>
+                        <div class="detail-text">
+                            <label>Ubicación</label>
+                            <p id="display-location">...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cart-footer" style="padding: 20px 0 0 0; background: transparent; border: none;">
+                    <button class="btn-edit-account" id="btn-edit-profile">
+                        <i class='bx bx-edit-alt'></i> Editar Perfil
+                    </button>
+                    <button class="btn-logout">Cerrar Sesión</button>
+                </div>
+            </div>
+
+            <div id="profile-edit-mode" style="display: none;">
+                <div class="edit-form-container">
+                    
+                    <div class="avatar-edit-container">
+                        <div class="avatar-preview-circle" id="avatar-preview">
+                            <div class="camera-overlay">
+                                <i class='bx bxs-camera'></i>
+                            </div>
+                        </div>
+                        <input type="file" id="file-upload" accept="image/*" style="display: none;">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nombre Completo</label>
+                        <input type="text" id="edit-name" class="edit-input">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Correo Electrónico</label>
+                        <input type="email" id="edit-email" class="edit-input">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Teléfono</label>
+                        <input type="text" id="edit-phone" class="edit-input">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Ubicación</label>
+                        <input type="text" id="edit-location" class="edit-input">
+                    </div>
+
+                    <div style="margin-top: 15px; border-top: 1px dashed #eee; padding-top: 10px;">
+                        <div class="form-group">
+                            <label>Nueva Contraseña (Opcional)</label>
+                            <input type="password" id="edit-password" class="edit-input" placeholder="Dejar en blanco para mantener">
+                        </div>
+    
+                        <div class="form-group">
+                            <label>Confirmar Contraseña</label>
+                            <input type="password" id="edit-confirm-password" class="edit-input" placeholder="Repite la contraseña">
+                        </div>
+                    </div>
+
+                    <div class="edit-actions">
+                        <button id="btn-cancel-edit" class="btn-cancel">Cancelar</button>
+                        <button id="btn-save-edit" class="btn-save">Guardar</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="cart-sidebar" id="orders-sidebar">
+        <div class="cart-header">
+            <h2>Mis Pedidos</h2>
+            <span class="close-cart" id="close-orders"><i class='bx bx-x'></i></span>
+        </div>
+        
+        <div class="cart-items" id="orders-list" style="padding: 20px; overflow-y: auto; height: calc(100% - 70px);">
+            </div>
+    </div>
+
+    <div id="custom-alert" class="custom-alert-overlay">
+        <div class="custom-alert-box">
+            <div class="alert-icon">
+                <i class='bx bx-error-circle'></i>
+            </div>
+            <h3>¡Atención!</h3>
+            <p id="custom-alert-message">Estás editando tu perfil.</p>
+            <button id="btn-close-alert">Entendido</button>
+        </div>
+    </div>
+
+    <div class="product-modal-overlay" id="product-modal-overlay">
+        <div class="product-modal-box">
+            <span class="close-product-modal" id="close-product-modal"><i class='bx bx-x'></i></span>
+            
+            <div class="pm-content-grid">
+                <div class="pm-image-section">
+                    <img id="pm-img" src="" alt="Producto">
+                </div>
+                <div class="pm-details-section">
+                    <span class="pm-category" id="pm-category">Categoría</span>
+                    <h2 class="pm-title" id="pm-title">Nombre del Producto</h2>
+                    
+                    <div class="pm-price-row">
+                        <span class="pm-price" id="pm-price">$0.00</span>
+                        <div class="pm-stock-badge">
+                            <i class='bx bx-check-circle'></i> Stock: <span id="pm-stock">0</span>
+                        </div>
+                    </div>
+
+                    <p class="pm-description" id="pm-desc">
+                        Descripción del producto...
+                    </p>
+
+                    <div class="pm-actions">
+                        <button class="add-btn modal-btn" id="pm-add-btn">
+                            Añadir al Carrito <i class='bx bx-cart-add'></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="product-modal-overlay" id="store-tracking-modal">
+        <div class="product-modal-box tracking-box">
+            <span class="close-product-modal" id="close-store-tracking"><i class='bx bx-x'></i></span>
+            
+            <div class="tracking-content">
+                <div class="tracking-header">
+                    <div class="icon-circle">
+                        <i class='bx bx-package'></i>
+                    </div>
+                    <h2>Detalles de Compra</h2>
+                    <p>Guía de Rastreo: <span id="stm-tracking-id" class="highlight-tracking">---</span></p>
+                </div>
+                
+                <div class="tracking-section">
+                    <h3>Datos del Cliente</h3>
+                    <div class="user-info-grid">
+                        <div class="info-group">
+                            <label>Nombre</label>
+                            <p id="stm-user-name">---</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Correo</label>
+                            <p id="stm-user-email">---</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Teléfono</label>
+                            <p id="stm-user-phone">---</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tracking-section">
+                    <h3>Productos</h3>
+                    <div class="tracking-products-list" id="stm-products-list">
+                        </div>
+                </div>
+
+                <div class="tracking-footer">
+                    <div class="tracking-total-row">
+                        <span>Total Pagado:</span>
+                        <span id="stm-total-price">$0.00</span>
+                    </div>
+                    <div class="tracking-status-row">
+                        <span>Estado Actual:</span>
+                        <span id="stm-order-status" class="status-badge">---</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container footer-content">
+            <div class="footer-logo">
+                <h2>Farma<span>Vida</span>.</h2>
+                <p>Tu farmacia de confianza a un clic de distancia.</p>
+            </div>
+            <div class="footer-links">
+                <h3>Enlaces</h3>
+                <a href="#">Inicio</a>
+                <a href="#">Catálogo</a>
+                <a href="#">Contacto</a>
+            </div>
+            <div class="footer-social">
+                <h3>Síguenos</h3>
+                <div class="social-icons">
+                    <i class='bx bxl-facebook'></i>
+                    <i class='bx bxl-instagram'></i>
+                    <i class='bx bxl-twitter'></i>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2025 FarmaVida. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+
+    
+</body>
+
+</html>
