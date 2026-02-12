@@ -254,43 +254,37 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 3. PEDIDOS (READ & UPDATE) ---
     async function fetchOrders() {
         try {
-            const res = await fetch(`${API_URL}/orders`);
+            const res = await fetch(`${API_URL}/orders`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
             const data = await res.json();
             
             ordersDB = data.map(o => {
-                // Crear objeto fecha
                 const d = new Date(o.created_at);
-                
-                // Construir manualmente el string AAAA-MM-DD en HORA LOCAL
-                // Esto evita errores de zona horaria
                 const year = d.getFullYear();
-                const month = String(d.getMonth() + 1).padStart(2, '0'); // Mes empieza en 0
+                const month = String(d.getMonth() + 1).padStart(2, '0');
                 const day = String(d.getDate()).padStart(2, '0');
-                const dateFilterStr = `${year}-${month}-${day}`; // Resultado: "2026-01-24"
+                const dateFilterStr = `${year}-${month}-${day}`;
 
                 return {
                     id: o.id,
                     client: o.user_name || "Cliente Desconocido",
                     email: o.user_email || "Sin correo",
                     phone: o.user_phone || "",
-                    
-                    // Fecha bonita para la tabla (24/01/2026)
-                    date: d.toLocaleDateString(), 
-                    
-                    // Fecha exacta para el filtro (2026-01-24)
-                    dateFilter: dateFilterStr, 
-                    
+                    date: d.toLocaleDateString(),
+                    dateFilter: dateFilterStr,
                     tracking: o.tracking_number || "Pendiente",
                     total: parseFloat(o.total),
                     status: o.status,
+                    // NUEVO: Guardamos la tasa histórica
+                    exchange_rate: parseFloat(o.exchange_rate_snapshot) || 0,
                     items: o.items || []
                 };
             });
 
-            // Si ya estamos en la vista de pedidos, refrescamos la tabla
             const orderSection = document.getElementById('view-orders');
             if (orderSection && orderSection.style.display === 'block') {
-                filterOrders(); // Llamamos al filtro para mostrar los datos
+                filterOrders();
             }
 
         } catch (error) {
@@ -800,19 +794,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- FUNCIÓN RENDER TABLE ACTUALIZADA (Con colores en la Guía) ---
     function renderTable(data) {
+        const tableBody = document.getElementById('orders-table-body');
+        const noResultsMsg = document.getElementById('no-results');
+
         tableBody.innerHTML = '';
-        if (!data || data.length === 0) { noResultsMsg.style.display = 'block'; return; }
+        if (!data || data.length === 0) { 
+            noResultsMsg.style.display = 'block'; 
+            return; 
+        }
         noResultsMsg.style.display = 'none';
         
         data.forEach(order => {
-            // Lógica de color para la Guía según el estado
-            let trackingClass = '';
-            
-            if (order.status === 'Entregado') {
-                trackingClass = 'delivered'; // Mantiene el Azul
-            } else {
-                trackingClass = 'pending';   // Nuevo color Naranja (Por entregar)
-            }
+            let trackingClass = order.status === 'Entregado' ? 'delivered' : 'pending';
+
+            // --- CAMBIO: SOLO MOSTRAMOS DÓLARES ---
+            // Eliminamos la lógica de cálculo de Bs. y el HTML extra.
+            let priceDisplay = `$${order.total.toFixed(2)}`;
+            // --------------------------------------
 
             const row = document.createElement('tr');
             row.innerHTML = `
@@ -827,7 +825,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${order.tracking || 'Pendiente'}
                     </span>
                 </td>
-                <td style="font-weight: 700;">$${order.total.toFixed(2)}</td>
+                <td style="font-weight: 700;">${priceDisplay}</td>
                 <td>
                     <button class="btn-view" onclick="openTrackingModal('${order.id}')">
                         <i class='bx bx-show'></i>
@@ -1783,11 +1781,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-
-
-
-
-
     // --- MODALES COMPARTIDOS ---
     const trackModal = document.getElementById('tracking-modal-overlay');
     const closeTrackModal = document.getElementById('close-tracking-modal');
@@ -1828,13 +1821,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.openTrackingModal = function (orderId) {
-        const order = ordersDB.find(o => o.id == orderId); // == permite comparar string con int
+        // Nota: == permite comparar string con int por si acaso
+        const order = ordersDB.find(o => o.id == orderId); 
         if (!order) return;
+
         document.getElementById('tm-tracking-id').innerText = order.tracking || "PENDIENTE";
         document.getElementById('tm-user-name').innerText = order.client;
         document.getElementById('tm-user-email').innerText = order.email;
         document.getElementById('tm-user-phone').innerText = order.phone;
-        document.getElementById('tm-total-price').innerText = '$' + order.total.toFixed(2);
+
+        const adminRateBox = document.getElementById('tm-rate-box');
+        const adminRateValue = document.getElementById('tm-rate-value');
+
+        if (order.exchange_rate > 0) {
+            adminRateValue.innerText = `Bs. ${order.exchange_rate.toFixed(2)}`;
+            adminRateBox.style.display = 'block';
+        } else {
+            adminRateBox.style.display = 'none';
+        }
+
+        // Mostrar Total en el Modal con conversión histórica
+        const totalEl = document.getElementById('tm-total-price');
+        let totalHTML = '$' + order.total.toFixed(2);
+        
+        if (order.exchange_rate > 0) {
+            const totalBs = (order.total * order.exchange_rate).toFixed(2);
+            totalHTML += ` <span style="font-size: 0.9rem; color: var(--text-dark);">(Bs. ${totalBs})</span>`;
+        }
+        totalEl.innerHTML = totalHTML;
+
         const listContainer = document.getElementById('tm-products-list');
         listContainer.innerHTML = '';
         
@@ -1842,20 +1857,19 @@ document.addEventListener('DOMContentLoaded', () => {
             order.items.forEach(item => {
                 const div = document.createElement('div');
                 div.classList.add('tracking-item');
-                
-                // CORRECCIÓN: Cambiar item.qty por item.quantity
-                div.innerHTML = `<span>${item.quantity}x ${item.name}</span><span>$${parseFloat(item.price).toFixed(2)}</span>`;
-                
+                div.innerHTML = `<span><strong>${item.quantity}x</strong>  ${item.name}</span><span>$${parseFloat(item.price).toFixed(2)}</span>`;
                 listContainer.appendChild(div);
             });
         } else {
             listContainer.innerHTML = '<div style="color:#999; font-style:italic;">Sin detalles disponibles</div>';
         }
 
+        const trackModal = document.getElementById('tracking-modal-overlay');
+        const btnComplete = document.getElementById('btn-complete-order');
+
         trackModal.classList.add('active');
         btnComplete.setAttribute('data-current-order', orderId);
         
-        // Ocultar botón completar si ya está completada
         if(order.status === 'Entregado') btnComplete.style.display = 'none';
         else btnComplete.style.display = 'flex';
     };

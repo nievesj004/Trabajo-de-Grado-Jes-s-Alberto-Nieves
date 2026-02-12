@@ -14,6 +14,10 @@ exports.createOrder = async (req, res) => {
 
         console.log("--- INICIANDO TRANSACCIÓN DE PEDIDO ---");
 
+        // 1. OBTENER TASA DEL MOMENTO (SNAPSHOT)
+        const [settings] = await connection.query('SELECT currency_rate FROM cms_settings WHERE id = 1');
+        const currentRate = settings.length > 0 ? settings[0].currency_rate : 0;
+
         let trackingNumber;
         let isUnique = false;
 
@@ -29,18 +33,14 @@ exports.createOrder = async (req, res) => {
         }
         console.log(`Guía generada: ${trackingNumber}`);
 
+        // Verificación de Stock (Igual que antes)
         for (const item of items) {
             const quantitySolicitada = Number(item.quantity);
             const itemId = item.product_id;
 
-            const [productRows] = await connection.query(
-                'SELECT stock, name FROM products WHERE id = ?', 
-                [itemId]
-            );
+            const [productRows] = await connection.query('SELECT stock, name FROM products WHERE id = ?', [itemId]);
 
-            if (productRows.length === 0) {
-                throw new Error(`Producto ID ${itemId} no encontrado.`);
-            }
+            if (productRows.length === 0) throw new Error(`Producto ID ${itemId} no encontrado.`);
 
             const product = productRows[0];
             const stockActual = Number(product.stock);
@@ -56,9 +56,10 @@ exports.createOrder = async (req, res) => {
             }
         }
 
+        // 2. INSERTAR ORDEN CON LA TASA HISTÓRICA (exchange_rate_snapshot)
         const [orderResult] = await connection.query(
-            'INSERT INTO orders (user_id, total, status, created_at, tracking_number) VALUES (?, ?, ?, NOW(), ?)',
-            [user_id, total, 'Pendiente', trackingNumber]
+            'INSERT INTO orders (user_id, total, status, created_at, tracking_number, exchange_rate_snapshot) VALUES (?, ?, ?, NOW(), ?, ?)',
+            [user_id, total, 'Pendiente', trackingNumber, currentRate]
         );
         const orderId = orderResult.insertId;
 
@@ -77,7 +78,7 @@ exports.createOrder = async (req, res) => {
         }
 
         await connection.commit();
-        console.log(`Orden #${orderId} creada con guía ${trackingNumber}.`);
+        console.log(`Orden #${orderId} creada con tasa: ${currentRate}`);
         
         res.status(201).json({ 
             message: 'Orden creada exitosamente', 
@@ -101,8 +102,9 @@ exports.createOrder = async (req, res) => {
 
 exports.getAllOrders = async (req, res) => {
     try {
+        // Agregamos o.exchange_rate_snapshot al SELECT
         const sql = `
-            SELECT o.id, o.total, o.status, o.created_at, o.tracking_number,
+            SELECT o.id, o.total, o.status, o.created_at, o.tracking_number, o.exchange_rate_snapshot,
             u.name as user_name, u.email as user_email, u.phone as user_phone
             FROM orders o
             JOIN users u ON o.user_id = u.id

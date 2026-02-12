@@ -1,5 +1,3 @@
-// --- 1. VARIABLE GLOBAL PARA GUARDAR PEDIDOS ---
-// Esto nos permite acceder a los datos desde cualquier parte sin pasarlos por HTML
 window.misPedidosTemp = [];
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -476,14 +474,14 @@ document.addEventListener('DOMContentLoaded', () => {
             pmCategory.innerText = data.category;
             pmTitle.innerText = data.name;
 
-            let priceText = `$${data.price.toFixed(2)}`;
+            let priceHTML = `$${data.price.toFixed(2)}`;
             
             if (exchangeRate > 0) {
                 const priceBs = (data.price * exchangeRate).toFixed(2);
-                priceText += ` / Bs. ${priceBs}`;
+                priceHTML += `<span style="color: var(--text-gray); font-size: 1rem; font-weight: normal;"> / Bs. ${priceBs}</span>`;
             }
 
-            pmPrice.innerText = priceText;
+            pmPrice.innerHTML = priceHTML;
             pmStock.innerText = data.stock;
             pmDesc.innerText = data.desc || "Sin descripción.";
 
@@ -530,6 +528,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateCartUI() {
         cartItemsContainer.innerHTML = '';
+        
         if (cart.length === 0) {
             cartItemsContainer.innerHTML = `
                 <div class="empty-cart-msg">
@@ -538,13 +537,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>`;
         } else {
             cart.forEach(item => {
+                // Calcular subtotal del ítem en Dólares
+                const itemTotalUsd = item.price * item.quantity;
+                
+                // --- NUEVO: Calcular subtotal en Bolívares ---
+                let priceHTML = `$${itemTotalUsd.toFixed(2)}`;
+                
+                if (typeof exchangeRate !== 'undefined' && exchangeRate > 0) {
+                    const itemTotalBs = (itemTotalUsd * exchangeRate).toFixed(2);
+                    // Agregamos el precio en Bs un poco más pequeño y gris
+                    priceHTML += `<div style="font-size: 0.8rem; color: #666; font-weight: normal;">Bs. ${itemTotalBs}</div>`;
+                }
+                // ---------------------------------------------
+
                 const itemElement = document.createElement('div');
                 itemElement.classList.add('cart-item-box');
                 itemElement.innerHTML = `
                     <img src="${item.img}" class="cart-img-preview">
                     <div class="cart-details">
                         <div class="cart-title">${item.name}</div>
-                        <div class="cart-price">$${(item.price * item.quantity).toFixed(2)}</div>
+                        
+                        <div class="cart-price">${priceHTML}</div>
+                        
                         <div class="cart-actions">
                             <input type="number" min="1" value="${item.quantity}" class="qty-input" data-id="${item.id}">
                             <i class='bx bxs-trash-alt trash-btn' data-id="${item.id}"></i>
@@ -554,17 +568,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 cartItemsContainer.appendChild(itemElement);
             });
         }
-
+        
+        // Eventos de inputs y eliminar (Se mantienen igual)
         document.querySelectorAll('.qty-input').forEach(input => {
             input.addEventListener('change', (e) => {
                 const id = parseInt(e.target.getAttribute('data-id'));
                 const newQty = parseInt(e.target.value);
                 const item = cart.find(i => i.id === id);
-                if (item) { item.quantity = newQty > 0 ? newQty : 1; }
+                if(item) { item.quantity = newQty > 0 ? newQty : 1; }
                 updateCartUI();
             });
         });
-
+        
         document.querySelectorAll('.trash-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const id = parseInt(e.target.getAttribute('data-id'));
@@ -573,9 +588,21 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
+        // --- CÁLCULO DEL TOTAL FINAL ---
         const total = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
         const count = cart.reduce((acc, item) => acc + item.quantity, 0);
-        totalPriceElement.innerText = '$' + total.toFixed(2);
+        
+        // Generamos el HTML del Total General
+        let totalHTML = `$${total.toFixed(2)}`;
+        
+        if (typeof exchangeRate !== 'undefined' && exchangeRate > 0) {
+            const totalBs = (total * exchangeRate).toFixed(2);
+            // Mostramos el total en Bs debajo, un poco más pequeño
+            totalHTML += `<div style="font-size: 0.9rem; color: #666; font-weight: 500; margin-top:2px;">Bs. ${totalBs}</div>`;
+        }
+
+        // Usamos innerHTML para permitir las etiquetas <div> y estilos
+        totalPriceElement.innerHTML = totalHTML; 
         cartCountElement.innerText = count;
     }
 
@@ -899,32 +926,49 @@ document.addEventListener('DOMContentLoaded', () => {
 // =========================================================
 window.openStoreOrderDetails = function (orderId) {
     try {
-        // 1. Buscar el pedido en la memoria global usando el ID
         const order = window.misPedidosTemp.find(o => o.id === orderId);
         const modal = document.getElementById('store-tracking-modal');
 
-        if (!modal) {
-            console.error("No se encontró el modal");
-            return;
-        }
-        if (!order) {
-            console.error("Pedido no encontrado en memoria");
-            return;
-        }
+        if (!modal || !order) return;
 
-        // 2. Obtener Usuario actualizado desde LocalStorage
-        // Esto evita el error de scope porque lo leemos aquí mismo
         const userLocal = JSON.parse(localStorage.getItem('user')) || {};
 
-        // 3. Llenar Encabezado
+        // 1. Llenar Textos Básicos
         document.getElementById('stm-tracking-id').innerText = order.tracking_number || "PENDIENTE";
-
-        // 4. Llenar Datos del Cliente
         document.getElementById('stm-user-name').innerText = userLocal.name || "Usuario";
         document.getElementById('stm-user-email').innerText = userLocal.email || "---";
         document.getElementById('stm-user-phone').innerText = userLocal.phone || "---";
 
-        // 5. Llenar Lista de Productos
+        // 2. Lógica de Tasa de Compra (El recuadro informativo)
+        const rateBox = document.getElementById('stm-rate-box');
+        const rateValue = document.getElementById('stm-rate-value');
+        const rateSnapshot = parseFloat(order.exchange_rate_snapshot) || 0;
+
+        if (rateSnapshot > 0) {
+            rateValue.innerText = `Bs. ${rateSnapshot.toFixed(2)}`;
+            rateBox.style.display = 'flex'; 
+        } else {
+            rateBox.style.display = 'none';
+        }
+
+        // 3. --- CAMBIO AQUÍ: TOTAL EN AMBAS MONEDAS ---
+        const totalEl = document.getElementById('stm-total-price');
+        
+        // A. Precio base en Dólares
+        let totalHTML = `$${parseFloat(order.total).toFixed(2)}`; 
+
+        // B. Si hay tasa histórica, calculamos y agregamos los Bolívares al lado
+        if (rateSnapshot > 0) {
+            const totalBs = (order.total * rateSnapshot).toFixed(2);
+            // Agregamos el texto "/ Bs. XXX" en gris y un poco más fino
+            totalHTML += `<span style="font-size: 0.7em; color: var(--text-dark); font-weight: 700; margin-left: 8px;">(Bs. ${totalBs})</span>`;
+        }
+
+        // C. Usamos innerHTML para que se lean los estilos del span
+        totalEl.innerHTML = totalHTML;
+        // ----------------------------------------------
+
+        // 4. Lista de Productos
         const list = document.getElementById('stm-products-list');
         list.innerHTML = '';
 
@@ -933,35 +977,24 @@ window.openStoreOrderDetails = function (orderId) {
                 const div = document.createElement('div');
                 div.className = 'tracking-item';
                 div.innerHTML = `
-                    <span><b>${item.quantity}x</b> ${item.name}</span>
-                    <span>$${parseFloat(item.price).toFixed(2)}</span>
+                    <span style="color: #444;"><strong>${item.quantity}x</strong> ${item.name}</span>
+                    <span style="font-weight:600;">$${parseFloat(item.price).toFixed(2)}</span>
                 `;
                 list.appendChild(div);
             });
         } else {
-            list.innerHTML = '<p style="text-align:center; color:#999;">Sin detalles.</p>';
+            list.innerHTML = '<p style="text-align:center; padding:15px; color:#999;">Sin detalles.</p>';
         }
-
-        // 6. Total y Estado
-        document.getElementById('stm-total-price').innerText = '$' + parseFloat(order.total).toFixed(2);
-
-        const statusEl = document.getElementById('stm-order-status');
-        statusEl.innerText = order.status;
-        statusEl.className = 'status-badge';
-
-        if (order.status === 'Pendiente') statusEl.classList.add('status-pendiente');
-        else if (order.status === 'Enviado') statusEl.classList.add('status-enviado');
-        else if (order.status === 'Entregado') statusEl.classList.add('status-entregado');
-
-        // 7. Mostrar Modal
+        
+        // 6. Mostrar Modal
         modal.classList.add('active');
 
-        // Configurar cierre
+        // Cerrar Modal
         const closeBtn = document.getElementById('close-store-tracking');
         if (closeBtn) closeBtn.onclick = () => modal.classList.remove('active');
-
-        modal.onclick = (e) => {
-            if (e.target === modal) modal.classList.remove('active');
+        
+        modal.onclick = (e) => { 
+            if (e.target === modal) modal.classList.remove('active'); 
         }
 
     } catch (e) {

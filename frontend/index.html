@@ -294,10 +294,10 @@
                 </div>
                 
                 <div class="tracking-section">
-                    <h3>Datos del Cliente</h3>
+                    <h3>Información del Envío</h3>
                     <div class="user-info-grid">
                         <div class="info-group">
-                            <label>Nombre</label>
+                            <label>Cliente</label>
                             <p id="stm-user-name">---</p>
                         </div>
                         <div class="info-group">
@@ -307,6 +307,11 @@
                         <div class="info-group">
                             <label>Teléfono</label>
                             <p id="stm-user-phone">---</p>
+                        </div>
+                        
+                        <div class="info-group" id="stm-rate-box" style="display: none;">
+                            <label style="color: var(--primary-color); font-weight: 600;">Tasa de Compra</label>
+                            <p id="stm-rate-value" style="font-weight: 700;">Bs. 0.00</p>
                         </div>
                     </div>
                 </div>
@@ -320,11 +325,7 @@
                 <div class="tracking-footer">
                     <div class="tracking-total-row">
                         <span>Total Pagado:</span>
-                        <span id="stm-total-price">$0.00</span>
-                    </div>
-                    <div class="tracking-status-row">
-                        <span>Estado Actual:</span>
-                        <span id="stm-order-status" class="status-badge">---</span>
+                        <span id="stm-total-price" style="font-size: 1.3rem; font-weight: 700; color: var(--primary-color);">$0.00</span>
                     </div>
                 </div>
             </div>

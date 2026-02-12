@@ -1612,10 +1612,7 @@ img {
 }
 
 .user-info-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
     gap: 10px;
-    background: #F9FAFB;
     padding: 15px;
     border-radius: 12px;
 }
@@ -1692,4 +1689,117 @@ img {
 .status-entregado {
     background: #E8F5E9;
     color: #2E7D32;
+}
+
+
+
+
+
+/* --- ESTILOS DEL MODAL DE DETALLES (COPIADOS DEL DASHBOARD) --- */
+
+/* Contenedor principal ajustado */
+.tracking-box {
+    max-width: 600px; /* Más ancho para que quepa el grid */
+    width: 95%;
+    padding: 0 !important; /* Quitamos padding del contenedor padre para manejarlo dentro */
+}
+
+.tracking-content {
+    padding: 25px;
+}
+
+/* Icono circular verde/azul */
+.tracking-header .icon-circle {
+    width: 60px;
+    height: 60px;
+    color: var(--primary-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin: 0 auto 15px;
+}
+
+.tracking-header h2 {
+    margin-bottom: 5px;
+    color: var(--text-dark);
+}
+
+.highlight-tracking {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+/* GRID DE INFORMACIÓN (Clave para que se vea igual) */
+.user-info-grid {
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.info-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-group label {
+    font-size: 0.75rem;
+    color: #888;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.info-group p {
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+    font-size: 0.95rem;
+    word-break: break-word;
+}
+
+/* Lista de productos y Footer */
+.tracking-products-list {
+    border: 1px solid #eee;
+    border-radius: 10px;
+    max-height: 250px;
+    overflow-y: auto;
+    margin-bottom: 0;
+}
+
+.tracking-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 15px;
+    border-bottom: 1px dashed #eee;
+    font-size: 0.95rem;
+}
+
+.tracking-item:last-child { border-bottom: none; }
+
+.tracking-footer {
+    border-top: 2px solid #f0f0f0;
+    padding-top: 20px;
+    margin-top: 20px;
+}
+
+/* Badges de Estado */
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+.status-pendiente { background: #FFF3E0; color: #EF6C00; }
+.status-enviado { background: #E3F2FD; color: #1976D2; }
+.status-entregado { background: #E8F5E9; color: #2E7D32; }
+
+/* Responsive */
+@media (max-width: 480px) {
+    .user-info-grid { grid-template-columns: 1fr; } /* 1 columna en móvil */
+    .tracking-footer { flex-direction: column; gap: 15px; text-align: center; }
 }
