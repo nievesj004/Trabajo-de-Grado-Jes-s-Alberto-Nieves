@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-
     // --- CONFIGURACIÓN API ---
     // Si tu backend corre en otro puerto, cámbialo aquí.
     const API_URL = 'http://localhost:3000/api';
@@ -70,7 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return response;
     }
-
 
     // ==========================================
     //  LÓGICA DEL MODAL "RESTAURAR COLORES"
@@ -397,13 +395,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('total-investment').innerText = '$' + totalInvest.toLocaleString('en-US', { minimumFractionDigits: 2 });
     }
 
-    
-
-    
-
-
-
-
     // --- GRÁFICO DE VENTAS (CARGA DINÁMICA) ---
     const ctx = document.getElementById('salesChart').getContext('2d');
     let salesChart; // Variable para controlar el gráfico
@@ -478,11 +469,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Error cargando gráfico:", error);
         }
     }
-
-
-
-
-
 
     // --- HELPER: CATEGORÍAS ---
     const prodCatFilter = document.getElementById('prod-cat-filter');
@@ -680,6 +666,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const imgPreview = document.getElementById('prod-img-preview');
     const uploadPlaceholder = document.getElementById('upload-placeholder-content');
 
+    if (inputPrice) {
+        const taxHint = document.createElement('small');
+
+        taxHint.style.color = '#666'; 
+        taxHint.style.display = 'block';
+        taxHint.style.marginTop = '5px';
+        taxHint.style.fontWeight = '500';
+
+        inputPrice.parentNode.appendChild(taxHint);
+
+        inputPrice.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+
+            if (!isNaN(val)) {
+                const final = (val * 1.16).toFixed(2);
+
+                taxHint.innerText = `Precio Final con IVA (16%): $${final}`;
+                taxHint.style.color = '#2E7D32';
+            } else {
+                taxHint.innerText = '';
+            }
+        });
+    }
+
     let currentImageBase64 = "";
     let existingImage = "";
 
@@ -719,11 +729,12 @@ document.addEventListener('DOMContentLoaded', () => {
     window.openProductModal = function (id) {
         populateCategorySelects();
         const prod = productsDB.find(p => p.id === id);
+        const precioSinIVA = (prod.price / 1.16).toFixed(2);
         if (!prod) return;
         inputId.value = prod.id;
         inputName.value = prod.name;
         inputCat.value = prod.category;
-        inputPrice.value = prod.price;
+        inputPrice.value = precioSinIVA;
         inputStock.value = prod.stock;
         inputDesc.value = prod.desc || "";
         existingImage = prod.img;
@@ -749,13 +760,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentImageBase64 !== "") finalImage = currentImageBase64;
 
         const id = inputId.value;
+        const precioBase = parseFloat(inputPrice.value);
+        const precioConIVA = precioBase * 1.16;
         const newProdData = {
             name: inputName.value,
             category: inputCat.value,
-            price: parseFloat(inputPrice.value),
+            price: precioConIVA,
             stock: parseInt(inputStock.value),
             description: inputDesc.value,
-            img: finalImage // Enviamos Base64 o URL
+            img: finalImage
         };
 
         try {
@@ -1357,9 +1370,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-
-
-
     const deleteHeroModal = document.getElementById('delete-hero-modal');
     const btnCancelDeleteHero = document.getElementById('btn-cancel-delete-hero');
     const btnConfirmDeleteHero = document.getElementById('btn-confirm-delete-hero');
@@ -1507,7 +1517,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 2. Filtrar productos
         const filteredProducts = productsDB.filter(prod => {
             const matchText = prod.name.toLowerCase().includes(searchTerm) || 
-                              prod.category.toLowerCase().includes(searchTerm);
+                            prod.category.toLowerCase().includes(searchTerm);
             const matchCat = catFilter === 'all' || prod.category === catFilter;
             return matchText && matchCat;
         });
@@ -1683,11 +1693,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    
-
-
-
-
     // ==========================================
     //  4. GESTIÓN DE COLORES (CORREGIDO)
     // ==========================================
@@ -1777,9 +1782,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
-
-
 
     // --- MODALES COMPARTIDOS ---
     const trackModal = document.getElementById('tracking-modal-overlay');
@@ -1971,14 +1973,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         return hex; // Si falla, retorna el original
     }
-
-    
-
-
-
-
-
-
 
     const btnSaveCurrency = document.getElementById('btn-save-currency');
     const inputCurrency = document.getElementById('cms-currency-rate');

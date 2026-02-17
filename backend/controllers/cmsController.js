@@ -31,8 +31,6 @@ exports.saveCMS = async (req, res) => {
     } = req.body;
 
     try {
-        // Usamos UPDATE directo apuntando al ID 1.
-        // Esto evita el problema de que se creen filas duplicadas si la tabla no tiene Primary Key.
         const query = `
             UPDATE cms_settings SET
             store_name = ?,
@@ -65,13 +63,10 @@ exports.saveCMS = async (req, res) => {
             carousel_json
         ]);
 
-        // Si no se afectó ninguna fila (result.affectedRows === 0), significa que no existe el registro ID 1.
-        // En ese caso (muy raro), hacemos un INSERT de emergencia.
         if (result.affectedRows === 0) {
             await db.query(`
                 INSERT INTO cms_settings (id, store_name) VALUES (1, 'FarmaVida')
             `);
-            // Volvemos a intentar el update
             return exports.saveCMS(req, res);
         }
         

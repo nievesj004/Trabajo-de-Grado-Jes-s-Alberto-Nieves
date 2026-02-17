@@ -14,7 +14,7 @@ exports.createOrder = async (req, res) => {
 
         console.log("--- INICIANDO TRANSACCIÓN DE PEDIDO ---");
 
-        // 1. OBTENER TASA DEL MOMENTO (SNAPSHOT)
+        // 1. Obtener Tasa Snapshot
         const [settings] = await connection.query('SELECT currency_rate FROM cms_settings WHERE id = 1');
         const currentRate = settings.length > 0 ? settings[0].currency_rate : 0;
 
@@ -33,17 +33,25 @@ exports.createOrder = async (req, res) => {
         }
         console.log(`Guía generada: ${trackingNumber}`);
 
-        // Verificación de Stock (Igual que antes)
+        // --- VALIDACIÓN DE STOCK Y OBTENCIÓN DE NOMBRES ---
+        // Creamos un mapa para guardar los nombres y usarlos al insertar
+        const productInfoMap = {}; 
+
         for (const item of items) {
             const quantitySolicitada = Number(item.quantity);
             const itemId = item.product_id;
 
             const [productRows] = await connection.query('SELECT stock, name FROM products WHERE id = ?', [itemId]);
 
-            if (productRows.length === 0) throw new Error(`Producto ID ${itemId} no encontrado.`);
+            if (productRows.length === 0) {
+                throw new Error(`Producto ID ${itemId} no encontrado.`);
+            }
 
             const product = productRows[0];
             const stockActual = Number(product.stock);
+
+            // Guardamos el nombre para congelarlo después
+            productInfoMap[itemId] = product.name;
 
             if (stockActual < quantitySolicitada) {
                 await connection.rollback();
@@ -56,21 +64,27 @@ exports.createOrder = async (req, res) => {
             }
         }
 
-        // 2. INSERTAR ORDEN CON LA TASA HISTÓRICA (exchange_rate_snapshot)
+        // --- INSERTAR ORDEN ---
         const [orderResult] = await connection.query(
             'INSERT INTO orders (user_id, total, status, created_at, tracking_number, exchange_rate_snapshot) VALUES (?, ?, ?, NOW(), ?, ?)',
             [user_id, total, 'Pendiente', trackingNumber, currentRate]
         );
         const orderId = orderResult.insertId;
 
+        // --- INSERTAR DETALLES (CON EL NOMBRE CONGELADO) ---
         for (const item of items) {
             const quantitySolicitada = Number(item.quantity);
             
+            // Recuperamos el nombre que obtuvimos en la validación
+            const frozenName = productInfoMap[item.product_id]; 
+
+            // AQUÍ ESTÁ EL CAMBIO CLAVE: Insertamos 'product_name' directamente
             await connection.query(
-                'INSERT INTO order_details (order_id, product_id, quantity, price_at_purchase) VALUES (?, ?, ?, ?)',
-                [orderId, item.product_id, quantitySolicitada, item.price]
+                'INSERT INTO order_details (order_id, product_id, product_name, quantity, price_at_purchase) VALUES (?, ?, ?, ?, ?)',
+                [orderId, item.product_id, frozenName, quantitySolicitada, item.price]
             );
 
+            // Descontar stock
             await connection.query(
                 'UPDATE products SET stock = stock - ? WHERE id = ?',
                 [quantitySolicitada, item.product_id]
@@ -102,7 +116,6 @@ exports.createOrder = async (req, res) => {
 
 exports.getAllOrders = async (req, res) => {
     try {
-        // Agregamos o.exchange_rate_snapshot al SELECT
         const sql = `
             SELECT o.id, o.total, o.status, o.created_at, o.tracking_number, o.exchange_rate_snapshot,
             u.name as user_name, u.email as user_email, u.phone as user_phone
@@ -113,11 +126,13 @@ exports.getAllOrders = async (req, res) => {
         const [rows] = await pool.query(sql);
         
         const ordersWithItems = await Promise.all(rows.map(async (order) => {
+            // CAMBIO: Ya no hacemos JOIN con products.
+            // Leemos product_name directamente de order_details.
+            // Esto permite ver el pedido aunque el producto original haya sido borrado.
             const [items] = await pool.query(
-                `SELECT od.quantity, od.price_at_purchase as price, p.name 
-                FROM order_details od 
-                JOIN products p ON od.product_id = p.id 
-                WHERE od.order_id = ?`,
+                `SELECT quantity, price_at_purchase as price, product_name as name 
+                FROM order_details 
+                WHERE order_id = ?`,
                 [order.id]
             );
             return { ...order, items };
@@ -143,14 +158,14 @@ exports.getUserOrders = async (req, res) => {
         const [orders] = await pool.query(query, [userId]);
 
         const ordersWithDetails = await Promise.all(orders.map(async (order) => {
+            // CAMBIO: Eliminado el JOIN con products.
             const [items] = await pool.query(
                 `SELECT 
-                    od.quantity, 
-                    od.price_at_purchase as price, 
-                    p.name
-                FROM order_details od 
-                JOIN products p ON od.product_id = p.id 
-                WHERE od.order_id = ?`, 
+                    quantity, 
+                    price_at_purchase as price, 
+                    product_name as name 
+                FROM order_details 
+                WHERE order_id = ?`, 
                 [order.id]
             );
             return { ...order, items };
