@@ -194,13 +194,13 @@ img {
 .hero-text h1 {
     font-size: 3.5rem;
     line-height: 1.1;
-    color: var(--text-dark);
+    color: var(--hero-text-color);
     margin-bottom: 20px;
 }
 
 .hero-text p {
     font-size: 1.1rem;
-    color: var(--text-gray);
+    color: var(--hero-text-color);
     margin-bottom: 30px;
     max-width: 450px;
 }

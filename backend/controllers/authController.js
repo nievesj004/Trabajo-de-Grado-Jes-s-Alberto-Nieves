@@ -146,3 +146,27 @@ exports.resetPassword = async (req, res) => {
         res.status(500).json({ message: 'Error al actualizar contraseña.' });
     }
 };
+
+
+exports.verifyCode = async (req, res) => {
+    const { email, code } = req.body;
+
+    try {
+        // Verificamos si existe el usuario con ese email, ese código y que no haya expirado
+        const [users] = await db.query(
+            'SELECT * FROM users WHERE email = ? AND reset_code = ? AND reset_expires > NOW()',
+            [email, code]
+        );
+
+        if (users.length === 0) {
+            return res.status(400).json({ message: 'Código inválido o expirado.' });
+        }
+
+        // Si encontramos usuario, el código es correcto
+        res.status(200).json({ message: 'Código válido.' });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al verificar el código.' });
+    }
+};

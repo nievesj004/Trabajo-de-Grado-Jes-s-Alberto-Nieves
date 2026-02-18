@@ -221,24 +221,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const toRecoveryBtn = document.getElementById('to-recovery');
     const backToLoginRecBtn = document.getElementById('back-to-login-from-rec');
     
+    // Pasos
     const step1Email = document.getElementById('step-1-email');
     const step2Code = document.getElementById('step-2-code');
+    const step3Pass = document.getElementById('step-3-pass'); // Nuevo paso
+    
+    // Botones
     const btnSendCode = document.getElementById('btn-send-code');
+    const btnVerifyStep = document.getElementById('btn-verify-step'); // Nuevo botón intermedio
     
-    // --- NAVEGACIÓN ENTRE FORMULARIOS ---
-    
-    // Ir a Recuperación
+    // --- NAVEGACIÓN ---
     toRecoveryBtn.addEventListener('click', () => {
         loginForm.classList.add('hidden');
         registerForm.classList.add('hidden');
         recoveryForm.classList.remove('hidden');
         formTitle.innerText = "Recuperar Contraseña";
-        // Resetear pasos
+        
+        // Reset visual
         step1Email.classList.remove('hidden');
         step2Code.classList.add('hidden');
+        step3Pass.classList.add('hidden');
     });
 
-    // Volver a Login
     backToLoginRecBtn.addEventListener('click', () => {
         recoveryForm.classList.add('hidden');
         loginForm.classList.remove('hidden');
@@ -247,13 +251,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- LÓGICA DE RECUPERACIÓN ---
 
-    // 1. Enviar Código
+    // 1. PASO 1 -> 2: Enviar Código
     btnSendCode.addEventListener('click', async () => {
         const email = document.getElementById('rec-email').value;
         if(!email) {
             showCustomAlert("Por favor ingresa tu correo.", "error");
             return;
         }
+
+        // Bloquear botón para evitar doble click
+        btnSendCode.disabled = true;
+        btnSendCode.innerText = "Enviando...";
 
         try {
             const res = await fetch(`${API_URL}/forgot-password`, {
@@ -265,7 +273,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if(res.ok) {
                 showCustomAlert(data.message, "success");
-                // Pasar al paso 2
                 step1Email.classList.add('hidden');
                 step2Code.classList.remove('hidden');
             } else {
@@ -273,35 +280,72 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             showCustomAlert("Error al enviar código.", "error");
+        } finally {
+            btnSendCode.disabled = false;
+            btnSendCode.innerText = "Enviar Código";
         }
     });
 
-    // 2. Confirmar Cambio
-    // 2. Confirmar Cambio (Recuperación)
+    // 2. PASO 2 -> 3: Verificar Código (VALIDACIÓN CON BACKEND)
+    btnVerifyStep.addEventListener('click', async () => {
+        const email = document.getElementById('rec-email').value;
+        const code = document.getElementById('rec-code').value;
+
+        if(!code) {
+            showCustomAlert("Ingresa el código.", "error");
+            return;
+        }
+
+        btnVerifyStep.disabled = true;
+        btnVerifyStep.innerText = "Verificando...";
+
+        try {
+            // Llamamos a la nueva ruta que creamos en el Paso 1
+            const res = await fetch(`${API_URL}/verify-code`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, code })
+            });
+            const data = await res.json();
+
+            if(res.ok) {
+                // Si el backend dice OK, pasamos al paso 3
+                step2Code.classList.add('hidden');
+                step3Pass.classList.remove('hidden');
+            } else {
+                showCustomAlert(data.message, "error");
+            }
+
+        } catch (error) {
+            console.error(error);
+            showCustomAlert("Error de conexión.", "error");
+        } finally {
+            btnVerifyStep.disabled = false;
+            btnVerifyStep.innerText = "Verificar Código";
+        }
+    });
+
+    // 3. PASO 3: Cambio Final
     recoveryForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        // Obtener valores
         const email = document.getElementById('rec-email').value;
-        const code = document.getElementById('rec-code').value;
+        const code = document.getElementById('rec-code').value; // Necesitamos enviar el código de nuevo para validar el cambio
         const newPassword = document.getElementById('rec-new-pass').value;
-        const confirmPassword = document.getElementById('rec-confirm-pass').value; // Nuevo campo
+        const confirmPassword = document.getElementById('rec-confirm-pass').value;
 
-        // --- VALIDACIONES ---
-        if(!code || !newPassword || !confirmPassword) {
-            showCustomAlert("Completa todos los campos.", "error");
+        if(!newPassword || !confirmPassword) {
+            showCustomAlert("Completa los campos.", "error");
             return;
         }
         
-        // Validar coincidencia
         if (newPassword !== confirmPassword) {
             showCustomAlert("Las contraseñas no coinciden.", "error");
             return;
         }
 
-        // Validar longitud
         if(newPassword.length < 6) {
-            showCustomAlert("La contraseña debe tener al menos 6 caracteres.", "error");
+            showCustomAlert("Mínimo 6 caracteres.", "error");
             return;
         }
 
@@ -315,29 +359,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if(res.ok) {
                 showCustomAlert("¡Contraseña restablecida! Inicia sesión.", "success");
-                
-                // Volver al login y limpiar todo después de 2 segundos
                 setTimeout(() => {
-                    recoveryForm.classList.add('hidden');
-                    loginForm.classList.remove('hidden');
-                    formTitle.innerText = "Iniciar Sesión";
-
-                    // Resetear pasos visuales
-                    step2Code.classList.add('hidden');
-                    step1Email.classList.remove('hidden');
-
-                    // Limpiar inputs
-                    document.getElementById('rec-code').value = '';
-                    document.getElementById('rec-new-pass').value = '';
-                    document.getElementById('rec-confirm-pass').value = ''; // Limpiar confirmación
-                    document.getElementById('rec-email').value = '';
-
+                    location.reload(); // Recargar para limpiar todo
                 }, 2000);
             } else {
                 showCustomAlert(data.message, "error");
             }
         } catch (error) {
-            showCustomAlert("Error al restablecer contraseña.", "error");
+            showCustomAlert("Error al cambiar contraseña.", "error");
         }
     });
 });

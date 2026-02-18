@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { key: '--bg-color', label: 'Fondo Pantalla', default: '#F9FAFB' },
         { key: '--card-bg', label: 'Fondo Tarjetas', default: '#FFFFFF' },
         { key: '--text-dark', label: 'Texto Títulos', default: '#1F2937' },
+        { key: '--hero-text-color', label: 'Texto Hero Banner', default: '#ffffff' },
         { key: '--text-gray', label: 'Texto Secundario', default: '#6B7280' },
         { key: '--border-color', label: 'Bordes', default: '#E5E7EB' }
     ];
@@ -17,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- FUNCIÓN FALTANTE: APLICAR TEMA ---
     function applyThemeToDashboard() {
         // Verifica si hay colores guardados en cmsData
-        if(cmsData.colors) {
+        if (cmsData.colors) {
             Object.entries(cmsData.colors).forEach(([key, val]) => {
                 // Aplica cada color a las variables CSS del documento (:root)
                 document.documentElement.style.setProperty(key, val);
@@ -42,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- FUNCIÓN HELPER PARA PETICIONES CON TOKEN ---
     async function authFetch(url, options = {}) {
         const token = localStorage.getItem('token');
-        
+
         // Si no hay token, forzamos salida (seguridad extra)
         if (!token) {
             window.location.href = 'login.html';
@@ -73,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     //  LÓGICA DEL MODAL "RESTAURAR COLORES"
     // ==========================================
-    
+
     // 1. Elementos del Modal
     const resetModal = document.getElementById('reset-colors-modal');
     const btnConfirmReset = document.getElementById('btn-confirm-reset');
@@ -81,22 +82,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnResetColors = document.getElementById('btn-reset-colors')
 
     // 2. Abrir el modal al hacer clic en "Restaurar Default"
-    if(btnResetColors) {
+    if (btnResetColors) {
         btnResetColors.addEventListener('click', (e) => {
             e.preventDefault(); // Evita recargas
-            if(resetModal) resetModal.classList.add('active');
+            if (resetModal) resetModal.classList.add('active');
         });
     }
 
     // 3. Botón "Cancelar" (Cierra el modal)
-    if(btnCancelReset) {
+    if (btnCancelReset) {
         btnCancelReset.addEventListener('click', () => {
-            if(resetModal) resetModal.classList.remove('active');
+            if (resetModal) resetModal.classList.remove('active');
         });
     }
 
     // 4. Botón "Sí, Restaurar" (Aplica la lógica)
-    if(btnConfirmReset) {
+    if (btnConfirmReset) {
         btnConfirmReset.addEventListener('click', async () => {
             // A. Restaurar datos en memoria (cmsData)
             const resetColors = {};
@@ -126,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
             resetModal.classList.remove('active');
         });
     }
-    
+
     // --- CARGA INICIAL DE DATOS ---
     async function loadAllData() {
         console.log("Iniciando carga de datos del servidor...");
@@ -155,37 +156,37 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await fetch(`${API_URL}/cms`);
             if (res.ok) {
-            const data = await res.json();
-                
-            // PARSEO SEGURO: Si falla el parseo, usamos un array/objeto vacío para no romper la web
-            let parsedColors = {};
-            let parsedCats = [];
-            let parsedCarousel = [];
+                const data = await res.json();
 
-            try { parsedColors = typeof data.colors_json === 'string' ? JSON.parse(data.colors_json) : data.colors_json; } catch(e){}
-            try { parsedCats = typeof data.categories_json === 'string' ? JSON.parse(data.categories_json) : data.categories_json; } catch(e){}
-            try { parsedCarousel = typeof data.carousel_json === 'string' ? JSON.parse(data.carousel_json) : data.carousel_json; } catch(e){}
+                // PARSEO SEGURO: Si falla el parseo, usamos un array/objeto vacío para no romper la web
+                let parsedColors = {};
+                let parsedCats = [];
+                let parsedCarousel = [];
 
-            cmsData = {
-                // USAMOS store_name (igual que en BD)
-                store_name: data.store_name || "FarmaVida",
-                store_logo: data.store_logo || "",
-                currency_rate: data.currency_rate || 0,
-                hero: {
-                    title: data.hero_title || "",
-                    text: data.hero_text || "",
-                    img: data.hero_img || "",
-                    bg_img: data.hero_bg_img || ""
-                },
-                carousel_title: data.carousel_title || "Lo Más Vendido",
-                catalog_title: data.catalog_title || "Catálogo",
-                colors: parsedColors || {},
-                categories: parsedCats || [],
-                carousel: parsedCarousel || []
-            };
+                try { parsedColors = typeof data.colors_json === 'string' ? JSON.parse(data.colors_json) : data.colors_json; } catch (e) { }
+                try { parsedCats = typeof data.categories_json === 'string' ? JSON.parse(data.categories_json) : data.categories_json; } catch (e) { }
+                try { parsedCarousel = typeof data.carousel_json === 'string' ? JSON.parse(data.carousel_json) : data.carousel_json; } catch (e) { }
 
-            updateDashboardLogo(cmsData.store_name);
-        }
+                cmsData = {
+                    // USAMOS store_name (igual que en BD)
+                    store_name: data.store_name || "FarmaVida",
+                    store_logo: data.store_logo || "",
+                    currency_rate: data.currency_rate || 0,
+                    hero: {
+                        title: data.hero_title || "",
+                        text: data.hero_text || "",
+                        img: data.hero_img || "",
+                        bg_img: data.hero_bg_img || ""
+                    },
+                    carousel_title: data.carousel_title || "Lo Más Vendido",
+                    catalog_title: data.catalog_title || "Catálogo",
+                    colors: parsedColors || {},
+                    categories: parsedCats || [],
+                    carousel: parsedCarousel || []
+                };
+
+                updateDashboardLogo(cmsData.store_name);
+            }
         } catch (error) {
             console.error("Error cargando CMS:", error);
         }
@@ -216,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 method: 'PUT',
                 body: JSON.stringify(payload)
             });
-            
+
             // Opcional: Actualizar logo localmente por si cambió el nombre
             updateDashboardLogo(cmsData.store_name);
 
@@ -230,7 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchProducts() {
         const res = await fetch(`${API_URL}/products`);
         const data = await res.json();
-        
+
         // Convertimos los nombres de la BD a lo que usa tu dashboard
         productsDB = data.map(p => ({
             id: p.id,
@@ -239,9 +240,12 @@ document.addEventListener('DOMContentLoaded', () => {
             stock: parseInt(p.stock),
             category: p.category,
             desc: p.description,
-            img: p.img_url || "https://via.placeholder.com/150"
+            img: p.img_url || "https://via.placeholder.com/150",
+            has_discount: p.has_discount,
+            discount_percent: p.discount_percent,
+            discount_ends_at: p.discount_ends_at
         }));
-        
+
         // Si la vista de productos está activa, refrescamos la tabla
         const prodSection = document.getElementById('view-products');
         if (prodSection && prodSection.style.display === 'block') {
@@ -256,7 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
             });
             const data = await res.json();
-            
+
             ordersDB = data.map(o => {
                 const d = new Date(o.created_at);
                 const year = d.getFullYear();
@@ -295,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await fetch(`${API_URL}/users`);
             const data = await res.json();
-            
+
             usersDB = data.map(u => ({
                 id: u.id,
                 name: u.name,
@@ -311,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (userSection && userSection.style.display === 'block') {
                 // Usamos filterUsers() para mantener el filtro si estás buscando algo
                 if (typeof filterUsers === 'function') {
-                    filterUsers(); 
+                    filterUsers();
                 } else {
                     renderUsers(usersDB);
                 }
@@ -349,20 +353,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const currencyInput = document.getElementById('cms-currency-rate');
             if (targetSection) targetSection.style.display = 'block';
 
-            if (targetId === 'view-dashboard') { 
-                pageTitle.innerText = "Resumen General"; 
-                if(currencyWidget) currencyWidget.style.display = 'none'; // Ocultar
-                updateDashboardKPIs(); 
+            if (targetId === 'view-dashboard') {
+                pageTitle.innerText = "Resumen General";
+                if (currencyWidget) currencyWidget.style.display = 'none'; // Ocultar
+                updateDashboardKPIs();
             }
             if (targetId === 'view-products') {
                 pageTitle.innerText = "Inventario de Productos";
-                
+
                 // --- MOSTRAR WIDGET Y PONER VALOR ---
-                if(currencyWidget && currencyInput) {
+                if (currencyWidget && currencyInput) {
                     currencyWidget.style.display = 'flex';
                     currencyInput.value = cmsData.currency_rate || "";
                 }
-                
+
                 populateCategorySelects();
                 renderProducts(productsDB);
             } else if (targetId !== 'view-products' && currencyWidget) {
@@ -370,12 +374,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 currencyWidget.style.display = 'none';
             }
             if (targetId === 'view-orders') {
-                pageTitle.innerText = "Gestión de Pedidos"; 
-                renderTable(ordersDB); 
+                pageTitle.innerText = "Gestión de Pedidos";
+                renderTable(ordersDB);
             }
-            if (targetId === 'view-users') { 
-                pageTitle.innerText = "Usuarios Registrados"; 
-                renderUsers(usersDB); 
+            if (targetId === 'view-users') {
+                pageTitle.innerText = "Usuarios Registrados";
+                renderUsers(usersDB);
             }
 
             // CMS SECTIONS
@@ -409,7 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 1. LEER EL COLOR DE LA VARIABLE CSS
         const primaryColor = getComputedStyle(document.documentElement)
-                            .getPropertyValue('--primary-color').trim() || '#2D3A95';
+            .getPropertyValue('--primary-color').trim() || '#2D3A95';
 
         salesChart = new Chart(ctx, {
             type: 'line',
@@ -433,7 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 scales: {
                     y: {
                         beginAtZero: true,
-                        ticks: { callback: function(value) { return '$' + value; } }
+                        ticks: { callback: function (value) { return '$' + value; } }
                     }
                 }
             }
@@ -449,10 +453,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch(`${API_URL}/orders/stats`);
             if (res.ok) {
                 const stats = await res.json();
-                
+
                 // Preparamos un array de 12 ceros (Ene-Dic)
                 const monthlyTotals = new Array(12).fill(0);
-                
+
                 // Llenamos el array según los datos que llegaron
                 stats.forEach(item => {
                     // item.month viene como '2026-01'. Extraemos el mes (01)
@@ -480,7 +484,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 1. Limpiar y preparar opciones base
         prodCatFilter.innerHTML = '<option value="all">Todas las Categorías</option>';
         prodCatInput.innerHTML = '';
-        
+
         if (cmsCarouselCatFilter) {
             cmsCarouselCatFilter.innerHTML = '<option value="all">Todas las Categorías</option>';
         }
@@ -489,12 +493,12 @@ document.addEventListener('DOMContentLoaded', () => {
         cmsData.categories.forEach(cat => {
             // Para el filtro de productos
             const optFilter = document.createElement('option');
-            optFilter.value = cat; optFilter.textContent = cat; 
+            optFilter.value = cat; optFilter.textContent = cat;
             prodCatFilter.appendChild(optFilter);
-            
+
             // Para el input de crear producto
             const optInput = document.createElement('option');
-            optInput.value = cat; optInput.textContent = cat; 
+            optInput.value = cat; optInput.textContent = cat;
             prodCatInput.appendChild(optInput);
 
             // NUEVO: Para el filtro del Carrusel
@@ -512,56 +516,93 @@ document.addEventListener('DOMContentLoaded', () => {
     const prodStockFilter = document.getElementById('prod-stock-filter');
     const noProdMsg = document.getElementById('no-products-msg');
 
+    // --- FUNCIÓN DE RENDERIZADO (CON LÓGICA VISUAL DE DESCUENTOS) ---
+    // --- FUNCIÓN DE RENDERIZADO (CON LÓGICA VISUAL DE DESCUENTOS) ---
+    // --- FUNCIÓN DE RENDERIZADO (CON LÓGICA VISUAL DE DESCUENTOS) ---
     function renderProducts(data) {
         productsContainer.innerHTML = '';
+
         if (!data || data.length === 0) {
             noProdMsg.style.display = 'block';
             return;
         }
         noProdMsg.style.display = 'none';
 
-        // 1. Obtenemos la tasa actual de la memoria (asegurando que sea número)
         const exchangeRate = parseFloat(cmsData.currency_rate) || 0;
 
         data.forEach(prod => {
-            let stockClass = '';
-            let stockText = '';
+            // Lógica de Stock
+            let stockClass = prod.stock === 0 ? 'out' : (prod.stock < 15 ? 'low' : 'ok');
+            let stockText = prod.stock === 0 ? `Agotado` : (prod.stock < 15 ? `Bajo Stock (${prod.stock})` : `Disponible (${prod.stock})`);
 
-            if (prod.stock === 0) {
-                stockClass = 'out'; 
-                stockText = `Agotado (0)`;
-            } else if (prod.stock < 15) {
-                stockClass = 'low'; 
-                stockText = `Bajo Stock (${prod.stock})`;
+            // --- LÓGICA DE PRECIOS Y MATEMÁTICA ---
+            const priceWithTax = parseFloat(prod.price); // Precio Base (con IVA incluido)
+            let priceHTML = '';
+
+            // 1. Verificamos si el descuento es válido (Activo = 1 Y Fecha Vencimiento > Ahora)
+            const now = new Date();
+            // Aseguramos que la fecha sea válida, si viene null usamos una fecha pasada
+            const endDate = prod.discount_ends_at ? new Date(prod.discount_ends_at) : new Date(0);
+
+            // Nota: En MySQL los booleanos suelen venir como 1 o 0
+            const hasActiveDiscount = (prod.has_discount == 1) && (prod.discount_percent > 0) && (endDate > now);
+
+            if (hasActiveDiscount) {
+                // A. CALCULAR PRECIO CON DESCUENTO
+                const discountAmount = priceWithTax * (prod.discount_percent / 100);
+                const finalPrice = priceWithTax - discountAmount;
+
+                // B. HTML DÓLARES (Tachado + Nuevo + Etiqueta %)
+                priceHTML = `
+                    <div style="line-height: 1.2;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="text-decoration: line-through; color: #999; font-size: 0.85rem;">$${priceWithTax.toFixed(2)}</span>
+                            
+                            <span style="background: #FFEBEE; color: var(--accent-color); font-size: 0.75rem; padding: 1px 5px; border-radius: 4px; font-weight:bold;">
+                                -${prod.discount_percent}%
+                            </span>
+                        </div>
+                        <div style="color: var(--accent-color); font-weight: bold; font-size: 1.2rem;">$${finalPrice.toFixed(2)}</div>
+                    </div>
+                `;
+
+                // C. HTML BOLÍVARES (Tachado + Nuevo)
+                if (exchangeRate > 0) {
+                    const oldBs = (priceWithTax * exchangeRate).toFixed(2);
+                    const newBs = (finalPrice * exchangeRate).toFixed(2);
+                    priceHTML += `
+                        <div style="font-size: 0.8rem; color: #666; margin-top: 4px; border-top: 1px dashed #eee; padding-top: 4px;">
+                        <span style="color: #333; font-weight: 600;">Bs. ${newBs}</span>
+                        <span style="text-decoration: line-through; font-size: 0.75rem; margin-right: 5px;">Bs. ${oldBs}</span>
+                        </div>
+                    `;
+                }
             } else {
-                stockClass = 'ok'; 
-                stockText = `Disponible (${prod.stock})`;
-            }
+                // D. PRECIO NORMAL (Sin descuento o descuento vencido)
+                priceHTML = `<div style="font-weight: bold; font-size: 1.1rem; color: var(--primary-color);">$${priceWithTax.toFixed(2)}</div>`;
 
-            // 2. LÓGICA DE PRECIO DUAL (Dólares / Bolívares)
-            let priceDisplay = `$${prod.price.toFixed(2)}`; // Precio base en $
-            
-            // Si hay una tasa configurada mayor a 0, calculamos los Bolívares
-            if (exchangeRate > 0) {
-                const priceBs = (prod.price * exchangeRate).toFixed(2);
-                // Formato: 10.00$ / Bs. 3000.00
-                priceDisplay = `<span style="font-weight:bold;">$${prod.price.toFixed(2)}</span> <span style="font-size:0.85rem; color: var(--text-gray);">/ Bs. ${priceBs}</span>`;
+                if (exchangeRate > 0) {
+                    const priceBs = (priceWithTax * exchangeRate).toFixed(2);
+                    priceHTML += `<div style="font-size: 0.85rem; color: #666;">Bs. ${priceBs}</div>`;
+                }
             }
+            // -----------------------------------------
 
+            // Construir Tarjeta HTML
             const card = document.createElement('div');
             card.classList.add('admin-product-card');
-            
-            // 3. Insertamos la variable 'priceDisplay' en el HTML
+
             card.innerHTML = `
                 <div class="prod-img-box">
                     <img src="${prod.img}" onerror="this.src='https://via.placeholder.com/150'">
+                    ${hasActiveDiscount ? '<div style="position:absolute; top:8px; right:8px; background: var(--accent-color); color:white; font-size:0.7rem; padding:3px 8px; border-radius:4px; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">OFERTA</div>' : ''}
                 </div>
                 <div class="prod-info">
                     <span class="category">${prod.category}</span>
-                    <h4>${prod.name}</h4>
+                    <h4 style="margin: 5px 0;">${prod.name}</h4>
                     
-                    <div class="price" style="color: var(--primary-color); font-size: 1.1rem;">
-                        ${priceDisplay}
+                    <div class="price-container" style="margin: 8px 0; min-height: 55px; display:flex; flex-direction:column; justify-content:center;">
+                        ${priceHTML}
                     </div>
 
                     <span class="stock-badge ${stockClass}">${stockText}</span>
@@ -588,29 +629,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const filtered = productsDB.filter(p => {
             // 1. Filtro Texto
             const matchText = p.name.toLowerCase().includes(term);
-            
+
             // 2. Filtro Categoría
             const matchCat = cat === 'all' || p.category === cat;
-            
+
             // 3. Filtro Stock (LÓGICA ACTUALIZADA)
             let matchStock = true;
             if (stockMode === 'available') matchStock = p.stock >= 15;        // Verde: 15 o más
             if (stockMode === 'low') matchStock = p.stock > 0 && p.stock < 15; // Amarillo: Entre 1 y 14
             if (stockMode === 'out') matchStock = p.stock === 0;              // Rojo: Exactamente 0
-            
+
             return matchText && matchCat && matchStock;
         });
-        
+
         renderProducts(filtered);
     }
 
     // --- EVENTOS (LISTENERS) ---
-    
+
     // 1. Buscador: Si escribes, reinicia los filtros para evitar confusión
     prodSearch.addEventListener('keyup', (e) => {
         if (e.target.value.trim().length > 0) {
-            prodCatFilter.value = 'all';    
-            prodStockFilter.value = 'all';  
+            prodCatFilter.value = 'all';
+            prodStockFilter.value = 'all';
         }
         filterProducts();
     });
@@ -665,11 +706,122 @@ document.addEventListener('DOMContentLoaded', () => {
     const uploadTrigger = document.getElementById('upload-trigger-zone');
     const imgPreview = document.getElementById('prod-img-preview');
     const uploadPlaceholder = document.getElementById('upload-placeholder-content');
+    const inputDiscountCheck = document.getElementById('prod-discount-active');
+    const inputDiscountPercent = document.getElementById('prod-discount-percent');
+    const inputDiscountDuration = document.getElementById('prod-discount-duration');
+    const discountSettingsDiv = document.getElementById('discount-settings');
 
+    if (inputDiscountCheck) {
+        inputDiscountCheck.addEventListener('change', (e) => {
+            discountSettingsDiv.style.display = e.target.checked ? 'flex' : 'none';
+        });
+    }
+
+    // --- BOTÓN GUARDAR (LÓGICA ACTUALIZADA) ---
+    if (btnSaveProd) btnSaveProd.addEventListener('click', async (e) => {
+        e.preventDefault();
+
+        // 1. Validaciones básicas
+        if (inputName.value.trim() === '' || inputPrice.value === '' || inputStock.value === '') {
+            alert("Completa los campos obligatorios.");
+            return;
+        }
+
+        let finalImage = existingImage || "https://via.placeholder.com/150";
+        if (currentImageBase64 !== "") finalImage = currentImageBase64;
+
+        // 2. Calcular Precio con IVA (16%)
+        const basePrice = parseFloat(inputPrice.value);
+        const priceWithTax = basePrice * 1.16;
+
+        // 3. --- LÓGICA NUEVA: PREPARAR DATOS DEL DESCUENTO ---
+        let isDiscount = inputDiscountCheck.checked ? 1 : 0; // Convertir true/false a 1/0 para la BD
+        let discountPercent = isDiscount ? parseInt(inputDiscountPercent.value) : 0;
+        let discountEndsAt = null;
+
+        // Si hay descuento, calculamos la fecha de vencimiento
+        // CÓDIGO NUEVO (SOLUCIÓN)
+        if (isDiscount === 1 && discountPercent > 0) {
+            const hours = parseInt(inputDiscountDuration.value); 
+            
+            // 1. Calculamos la fecha futura normal
+            const targetDate = new Date(Date.now() + (hours * 60 * 60 * 1000));
+
+            // 2. CORRECCIÓN DE ZONA HORARIA (VENEZUELA)
+            // Obtenemos la diferencia en minutos entre tu PC y la hora UTC (Ej: 240 min)
+            const offsetMs = targetDate.getTimezoneOffset() * 60000;
+            
+            // Creamos una nueva fecha restando esa diferencia para "engañar" al ISOString
+            const localDate = new Date(targetDate.getTime() - offsetMs);
+
+            // 3. Ahora .toISOString() nos dará la hora local exacta porque le restamos el offset
+            discountEndsAt = localDate.toISOString().slice(0, 19).replace('T', ' ');
+
+            console.log("Hora Local a guardar:", discountEndsAt); // Míralo en la consola (F12)
+        } else {
+            // ... (el resto del else queda igual)
+            isDiscount = 0;
+            discountPercent = 0;
+            discountEndsAt = null;
+        }
+        // -----------------------------------------------------
+
+        const id = inputId.value;
+
+        // 4. CREAR EL OBJETO CON TODOS LOS DATOS (INCLUYENDO LOS NUEVOS)
+        const newProdData = {
+            name: inputName.value,
+            category: inputCat.value,
+            price: priceWithTax,
+            stock: parseInt(inputStock.value),
+            description: inputDesc.value,
+            img: finalImage,
+
+            // Aquí enviamos las nuevas columnas al Backend:
+            has_discount: isDiscount,
+            discount_percent: discountPercent,
+            discount_ends_at: discountEndsAt
+        };
+
+        try {
+            let url = `${API_URL}/products`;
+            let method = 'POST';
+
+            if (id) {
+                url = `${API_URL}/products/${id}`;
+                method = 'PUT';
+            }
+
+            // Enviamos la petición
+            const res = await authFetch(url, {
+                method: method,
+                body: JSON.stringify(newProdData)
+            });
+
+            if (res && res.ok) {
+                await fetchProducts();      // Recargar lista
+                updateDashboardKPIs();      // Actualizar contadores
+                addModal.classList.remove('active'); // Cerrar modal
+
+                // Limpiar formulario manual (opcional, para que no quede basura)
+                inputDiscountCheck.checked = false;
+                inputDiscountPercent.value = '';
+            } else {
+                alert("Hubo un error en la respuesta del servidor.");
+            }
+
+        } catch (error) {
+            console.error(error);
+            alert("Error de conexión al guardar.");
+        }
+    });
+
+
+    // --- LÓGICA VISUAL DEL IVA EN INPUT DE PRECIO ---
     if (inputPrice) {
         const taxHint = document.createElement('small');
-
-        taxHint.style.color = '#666'; 
+        taxHint.id = 'prod-tax-hint'; // <--- AGREGAMOS UN ID PARA ENCONTRARLO LUEGO
+        taxHint.style.color = '#666';
         taxHint.style.display = 'block';
         taxHint.style.marginTop = '5px';
         taxHint.style.fontWeight = '500';
@@ -679,12 +831,13 @@ document.addEventListener('DOMContentLoaded', () => {
         inputPrice.addEventListener('input', (e) => {
             const val = parseFloat(e.target.value);
 
-            if (!isNaN(val)) {
+            // Validamos que sea un número Y que el campo no esté vacío (espacios en blanco)
+            if (!isNaN(val) && inputPrice.value.trim() !== '') {
                 const final = (val * 1.16).toFixed(2);
-
                 taxHint.innerText = `Precio Final con IVA (16%): $${final}`;
                 taxHint.style.color = '#2E7D32';
             } else {
+                // Si el campo está vacío o no es un número, borramos el texto
                 taxHint.innerText = '';
             }
         });
@@ -711,6 +864,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnOpenAdd.addEventListener('click', () => {
         populateCategorySelects();
+        
+        // --- AGREGA ESTAS LÍNEAS AQUÍ ---
+        // Buscamos el texto del IVA por su ID y lo vaciamos
+        const taxHint = document.getElementById('prod-tax-hint');
+        if (taxHint) taxHint.innerText = ''; 
+        // --------------------------------
+
         inputId.value = '';
         inputName.value = '';
         inputPrice.value = '';
@@ -722,19 +882,33 @@ document.addEventListener('DOMContentLoaded', () => {
         imgPreview.src = "";
         imgPreview.style.display = 'none';
         uploadPlaceholder.style.display = 'flex';
+
+        if (inputDiscountCheck) {
+            inputDiscountCheck.checked = false;
+            discountSettingsDiv.style.display = 'none';
+            inputDiscountPercent.value = '';
+            inputDiscountDuration.value = '24';
+        }
+
         modalTitle.innerText = "Nuevo Producto";
         addModal.classList.add('active');
     });
 
+    // Variable auxiliar para recordar la fecha original al editar
+    let editingDiscountDate = null;
+
     window.openProductModal = function (id) {
         populateCategorySelects();
         const prod = productsDB.find(p => p.id === id);
-        const precioSinIVA = (prod.price / 1.16).toFixed(2);
         if (!prod) return;
+
         inputId.value = prod.id;
         inputName.value = prod.name;
         inputCat.value = prod.category;
-        inputPrice.value = precioSinIVA;
+
+        // Precio SIN IVA
+        inputPrice.value = (prod.price / 1.16).toFixed(2);
+
         inputStock.value = prod.stock;
         inputDesc.value = prod.desc || "";
         existingImage = prod.img;
@@ -743,60 +917,35 @@ document.addEventListener('DOMContentLoaded', () => {
         imgPreview.src = prod.img;
         imgPreview.style.display = 'block';
         uploadPlaceholder.style.display = 'none';
+
+        // --- CARGAR DATOS DESCUENTO ---
+        // Usamos comparación laxa (== 1) porque la BD puede devolver "1" string o 1 int
+        const isActive = (prod.has_discount == 1);
+
+        // Guardamos la fecha original en memoria
+        editingDiscountDate = prod.discount_ends_at;
+
+        if (inputDiscountCheck) {
+            inputDiscountCheck.checked = isActive;
+
+            // Mostrar/Ocultar div (validando que exista)
+            if (discountSettingsDiv) discountSettingsDiv.style.display = isActive ? 'flex' : 'none';
+
+            if (isActive) {
+                inputDiscountPercent.value = prod.discount_percent;
+                // Dejamos el select en 24h por defecto, pero al guardar usaremos lógica inteligente
+                inputDiscountDuration.value = '24';
+            } else {
+                inputDiscountPercent.value = '';
+            }
+        }
+        // ------------------------------
+
         modalTitle.innerText = "Editar Producto";
         addModal.classList.add('active');
     };
 
     closeAddModal.addEventListener('click', () => addModal.classList.remove('active'));
-
-    btnSaveProd.addEventListener('click', async (e) => {
-        e.preventDefault();
-        if (inputName.value.trim() === '' || inputPrice.value === '' || inputStock.value === '') {
-            alert("Completa los campos obligatorios.");
-            return;
-        }
-
-        let finalImage = existingImage || "https://via.placeholder.com/150";
-        if (currentImageBase64 !== "") finalImage = currentImageBase64;
-
-        const id = inputId.value;
-        const precioBase = parseFloat(inputPrice.value);
-        const precioConIVA = precioBase * 1.16;
-        const newProdData = {
-            name: inputName.value,
-            category: inputCat.value,
-            price: precioConIVA,
-            stock: parseInt(inputStock.value),
-            description: inputDesc.value,
-            img: finalImage
-        };
-
-        try {
-            if (id) {
-                // EDITAR (PUT) - Usando authFetch
-                await authFetch(`${API_URL}/products/${id}`, {
-                    method: 'PUT',
-                    body: JSON.stringify(newProdData)
-                });
-            } else {
-                // CREAR (POST) - Usando authFetch
-                await authFetch(`${API_URL}/products`, {
-                    method: 'POST',
-                    body: JSON.stringify(newProdData)
-                });
-            }
-            
-            await fetchProducts();
-            updateDashboardKPIs();
-            addModal.classList.remove('active');
-            successMsgElement.innerText = "Producto guardado correctamente.";
-            successModal.classList.add('active');
-
-        } catch (error) {
-            console.error(error);
-            alert("Error al guardar el producto.");
-        }
-    });
 
     // --- PEDIDOS (TABLA) ---
     const tableBody = document.getElementById('orders-table-body');
@@ -811,12 +960,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const noResultsMsg = document.getElementById('no-results');
 
         tableBody.innerHTML = '';
-        if (!data || data.length === 0) { 
-            noResultsMsg.style.display = 'block'; 
-            return; 
+        if (!data || data.length === 0) {
+            noResultsMsg.style.display = 'block';
+            return;
         }
         noResultsMsg.style.display = 'none';
-        
+
         data.forEach(order => {
             let trackingClass = order.status === 'Entregado' ? 'delivered' : 'pending';
 
@@ -854,13 +1003,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- FUNCIÓN DE FILTRADO DE PEDIDOS ACTUALIZADA ---
     function filterOrders() {
         const searchTerm = searchInput.value.toLowerCase();
-        const dateTerm = dateInput.value; 
+        const dateTerm = dateInput.value;
         const statusTerm = orderStatusFilter.value; // <--- Valor del nuevo select
 
         const filtered = ordersDB.filter(order => {
             // 1. Filtro Texto (Nombre o Guía)
             const matchText = (order.client || '').toLowerCase().includes(searchTerm) || (order.tracking || '').includes(searchTerm);
-            
+
             // 2. Filtro Fecha
             const matchDate = dateTerm === '' || order.dateFilter === dateTerm;
 
@@ -868,7 +1017,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let matchStatus = true;
             if (statusTerm === 'pending') {
                 // Muestra todo lo que NO sea "Entregado" (Pendiente, Enviado, etc.)
-                matchStatus = order.status !== 'Entregado'; 
+                matchStatus = order.status !== 'Entregado';
             }
             if (statusTerm === 'delivered') {
                 // Muestra SOLO lo que sea "Entregado"
@@ -877,7 +1026,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             return matchText && matchDate && matchStatus;
         });
-        
+
         renderTable(filtered);
     }
 
@@ -888,7 +1037,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // ELIMINAMOS LA LÍNEA QUE RESETEABA EL ESTADO
             // Así se mantiene el filtro "Por Entregar" o "Entregados" si estaba activo
         }
-        filterOrders(); 
+        filterOrders();
     });
 
     // 2. Selects e Inputs (Se mantienen igual)
@@ -896,9 +1045,9 @@ document.addEventListener('DOMContentLoaded', () => {
     orderStatusFilter.addEventListener('change', filterOrders);
 
     // 3. Botón Limpiar (Manual)
-    clearDateBtn.addEventListener('click', () => { 
-        dateInput.value = ''; 
-        filterOrders(); 
+    clearDateBtn.addEventListener('click', () => {
+        dateInput.value = '';
+        filterOrders();
     });
 
     // --- USUARIOS (TABLA) ---
@@ -923,19 +1072,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 2. ORDENAR: Mover al usuario logueado al principio (sin tocar los datos originales)
         const sortedData = [...data].sort((a, b) => {
-            if (loggedUser && a.id === loggedUser.id) return -1; 
+            if (loggedUser && a.id === loggedUser.id) return -1;
             if (loggedUser && b.id === loggedUser.id) return 1;
-            return 0; 
+            return 0;
         });
 
         sortedData.forEach(user => {
             const statusClass = user.status === 'active' ? 'active' : 'inactive';
             const statusText = user.status === 'active' ? 'Activo' : 'Inactivo';
             const row = document.createElement('tr');
-            
+
             // --- AQUÍ ESTÁ EL CAMBIO CLAVE ---
             // Creamos una variable TEMPORAL para visualizar, NO tocamos user.name
-            let displayName = user.name; 
+            let displayName = user.name;
 
             if (loggedUser && user.id === loggedUser.id) {
                 row.classList.add('current-user-row');
@@ -1070,10 +1219,10 @@ document.addEventListener('DOMContentLoaded', () => {
         userModalTitle.innerText = "Editar Usuario";
         userNameInput.value = user.name;
         userEmailInput.value = user.email;
-        userRoleInput.value = user.role;     
+        userRoleInput.value = user.role;
         userPassInput.value = '';
         userPassConfirmInput.value = '';
-        
+
         // Imagen...
         existingUserImage = user.img;
         currentUserImageBase64 = "";
@@ -1105,7 +1254,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btnSaveUser.addEventListener('click', async (e) => {
         e.preventDefault();
         const id = userIdInput.value;
-        
+
         // 1. Validación de campos básicos
         if (userNameInput.value.trim() === '' || userEmailInput.value.trim() === '') {
             showWarningAlert('Por favor complete el nombre y el correo.');
@@ -1120,7 +1269,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (password !== "") {
             if (password !== confirmPassword) {
                 // AQUÍ USAMOS TU MODAL PERSONALIZADO
-                showCustomAlert("Las contraseñas no coinciden."); 
+                showCustomAlert("Las contraseñas no coinciden.");
                 return; // Detenemos el proceso para que no guarde
             }
             if (password.length < 6) {
@@ -1139,7 +1288,7 @@ document.addEventListener('DOMContentLoaded', () => {
             email: userEmailInput.value,
             role: userRoleInput.value,
             status: 'active',
-            password: password, 
+            password: password,
             img_url: finalImage
         };
 
@@ -1151,10 +1300,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 method: method,
                 body: JSON.stringify(userData)
             });
-            
+
             await fetchUsers();
             userModal.classList.remove('active');
-            
+
             // Usamos el modal de éxito existente
             successMsgElement.innerText = "Usuario guardado correctamente.";
             successModal.classList.add('active');
@@ -1240,23 +1389,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. FUNCIÓN PARA PINTAR DATOS EN LOS INPUTS
     function renderCMSHero() {
         // Textos
-        if(storeNameInput) storeNameInput.value = cmsData.store_name || "";
-        if(carouselTitleInput) carouselTitleInput.value = cmsData.carousel_title || "";
-        if(catalogTitleInput) catalogTitleInput.value = cmsData.catalog_title || "";
-        if(heroTitleInput) heroTitleInput.value = cmsData.hero.title || "";
-        if(heroTextInput) heroTextInput.value = cmsData.hero.text || "";
+        if (storeNameInput) storeNameInput.value = cmsData.store_name || "";
+        if (carouselTitleInput) carouselTitleInput.value = cmsData.carousel_title || "";
+        if (catalogTitleInput) catalogTitleInput.value = cmsData.catalog_title || "";
+        if (heroTitleInput) heroTitleInput.value = cmsData.hero.title || "";
+        if (heroTextInput) heroTextInput.value = cmsData.hero.text || "";
 
         const currentLogo = storeLogoBase64 || cmsData.store_logo;
         if (currentLogo && currentLogo.trim() !== "") {
             logoPreview.src = currentLogo;
             logoPreview.style.display = 'block';
             logoPlaceholder.style.display = 'none';
-            if(btnDeleteLogo) btnDeleteLogo.style.display = 'block';
+            if (btnDeleteLogo) btnDeleteLogo.style.display = 'block';
         } else {
             logoPreview.style.display = 'none';
             logoPreview.src = "";
             logoPlaceholder.style.display = 'flex';
-            if(btnDeleteLogo) btnDeleteLogo.style.display = 'none';
+            if (btnDeleteLogo) btnDeleteLogo.style.display = 'none';
         }
 
         // --- IMAGEN DERECHA ---
@@ -1268,14 +1417,14 @@ document.addEventListener('DOMContentLoaded', () => {
             heroImgPreview.style.display = 'block';
             heroUploadPlaceholder.style.display = 'none';
             // Mostrar botón eliminar
-            if(btnDeleteHeroImg) btnDeleteHeroImg.style.display = 'block';
+            if (btnDeleteHeroImg) btnDeleteHeroImg.style.display = 'block';
         } else {
             // Reset visual
             heroImgPreview.style.display = 'none';
             heroImgPreview.src = "";
             heroUploadPlaceholder.style.display = 'flex';
             // Ocultar botón eliminar
-            if(btnDeleteHeroImg) btnDeleteHeroImg.style.display = 'none';
+            if (btnDeleteHeroImg) btnDeleteHeroImg.style.display = 'none';
         }
 
         // --- IMAGEN FONDO ---
@@ -1286,24 +1435,24 @@ document.addEventListener('DOMContentLoaded', () => {
             heroBgPreview.style.display = 'block';
             heroBgPlaceholder.style.display = 'none';
             // Mostrar botón eliminar
-            if(btnDeleteHeroBg) btnDeleteHeroBg.style.display = 'block';
+            if (btnDeleteHeroBg) btnDeleteHeroBg.style.display = 'block';
         } else {
             // Reset visual
             heroBgPreview.style.display = 'none';
             heroBgPreview.src = "";
             heroBgPlaceholder.style.display = 'flex';
             // Ocultar botón eliminar
-            if(btnDeleteHeroBg) btnDeleteHeroBg.style.display = 'none';
+            if (btnDeleteHeroBg) btnDeleteHeroBg.style.display = 'none';
         }
     }
 
     // 4. EVENTOS DE UPLOAD (Subir archivos)
-    
+
     // A. Imagen Derecha
-    if(heroUploadTrigger) {
+    if (heroUploadTrigger) {
         heroUploadTrigger.addEventListener('click', () => heroImgFile.click());
     }
-    if(heroImgFile) {
+    if (heroImgFile) {
         heroImgFile.addEventListener('change', function (e) {
             const file = e.target.files[0];
             if (file) {
@@ -1320,10 +1469,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // B. Imagen Fondo
-    if(heroBgTrigger) {
+    if (heroBgTrigger) {
         heroBgTrigger.addEventListener('click', () => heroBgFile.click());
     }
-    if(heroBgFile) {
+    if (heroBgFile) {
         heroBgFile.addEventListener('change', function (e) {
             const file = e.target.files[0];
             if (file) {
@@ -1338,13 +1487,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    
+
 
     // A. LÓGICA DE SUBIDA DEL LOGO
-    if(logoUploadTrigger) {
+    if (logoUploadTrigger) {
         logoUploadTrigger.addEventListener('click', () => logoFile.click());
     }
-    if(logoFile) {
+    if (logoFile) {
         logoFile.addEventListener('change', function (e) {
             const file = e.target.files[0];
             if (file) {
@@ -1354,7 +1503,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     logoPreview.src = storeLogoBase64;
                     logoPreview.style.display = 'block';
                     logoPlaceholder.style.display = 'none';
-                    if(btnDeleteLogo) btnDeleteLogo.style.display = 'block'; // Mostrar borrar
+                    if (btnDeleteLogo) btnDeleteLogo.style.display = 'block'; // Mostrar borrar
                 }
                 reader.readAsDataURL(file);
             }
@@ -1366,23 +1515,23 @@ document.addEventListener('DOMContentLoaded', () => {
         btnDeleteLogo.addEventListener('click', (e) => {
             e.preventDefault();
             heroImageTypeToDelete = 'logo'; // Usamos una nueva clave 'logo'
-            if(deleteHeroModal) deleteHeroModal.classList.add('active');
+            if (deleteHeroModal) deleteHeroModal.classList.add('active');
         });
     }
 
     const deleteHeroModal = document.getElementById('delete-hero-modal');
     const btnCancelDeleteHero = document.getElementById('btn-cancel-delete-hero');
     const btnConfirmDeleteHero = document.getElementById('btn-confirm-delete-hero');
-    
+
     // Variable temporal para recordar qué estamos borrando ('main' o 'bg')
-    let heroImageTypeToDelete = null; 
+    let heroImageTypeToDelete = null;
 
     // 2. Al hacer clic en "Eliminar" (Imagen Principal) -> ABRIR MODAL
     if (btnDeleteHeroImg) {
         btnDeleteHeroImg.addEventListener('click', (e) => {
             e.preventDefault();
             heroImageTypeToDelete = 'main'; // Marcamos: queremos borrar la principal
-            if(deleteHeroModal) deleteHeroModal.classList.add('active'); // Mostrar modal
+            if (deleteHeroModal) deleteHeroModal.classList.add('active'); // Mostrar modal
         });
     }
 
@@ -1391,49 +1540,49 @@ document.addEventListener('DOMContentLoaded', () => {
         btnDeleteHeroBg.addEventListener('click', (e) => {
             e.preventDefault();
             heroImageTypeToDelete = 'bg'; // Marcamos: queremos borrar el fondo
-            if(deleteHeroModal) deleteHeroModal.classList.add('active'); // Mostrar modal
+            if (deleteHeroModal) deleteHeroModal.classList.add('active'); // Mostrar modal
         });
     }
 
     // 4. Botón "Cancelar" del modal -> CERRAR SIN HACER NADA
-    if(btnCancelDeleteHero) {
+    if (btnCancelDeleteHero) {
         btnCancelDeleteHero.addEventListener('click', () => {
-            if(deleteHeroModal) deleteHeroModal.classList.remove('active');
+            if (deleteHeroModal) deleteHeroModal.classList.remove('active');
             heroImageTypeToDelete = null; // Limpiar memoria
         });
     }
 
     // 5. Botón "Sí, Quitar" del modal -> EJECUTAR BORRADO
-    if(btnConfirmDeleteHero) {
+    if (btnConfirmDeleteHero) {
         btnConfirmDeleteHero.addEventListener('click', () => {
-            
+
             if (heroImageTypeToDelete === 'main') {
                 // --- BORRAR IMAGEN PRINCIPAL ---
                 cmsData.hero.img = "";
                 heroImageBase64 = "";
-                if(heroImgFile) heroImgFile.value = "";
-            
+                if (heroImgFile) heroImgFile.value = "";
+
             } else if (heroImageTypeToDelete === 'bg') {
                 // --- BORRAR IMAGEN DE FONDO ---
                 cmsData.hero.bg_img = "";
                 heroBgBase64 = "";
-                if(heroBgFile) heroBgFile.value = "";
-            } else if (heroImageTypeToDelete === 'logo') { 
+                if (heroBgFile) heroBgFile.value = "";
+            } else if (heroImageTypeToDelete === 'logo') {
                 // --- NUEVO CASO: BORRAR LOGO ---
                 cmsData.store_logo = "";    // Borrar de memoria
                 storeLogoBase64 = "";       // Borrar temporal
-                if(logoFile) logoFile.value = ""; // Limpiar input
+                if (logoFile) logoFile.value = ""; // Limpiar input
             }
 
             // Actualizar la vista y cerrar el modal
             renderCMSHero();
-            if(deleteHeroModal) deleteHeroModal.classList.remove('active');
+            if (deleteHeroModal) deleteHeroModal.classList.remove('active');
             heroImageTypeToDelete = null;
         });
     }
 
     // Cerrar modal al hacer clic en el fondo oscuro
-    if(deleteHeroModal) {
+    if (deleteHeroModal) {
         deleteHeroModal.addEventListener('click', (e) => {
             if (e.target === deleteHeroModal) {
                 deleteHeroModal.classList.remove('active');
@@ -1444,7 +1593,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 5. BOTÓN GUARDAR TODO
     const btnSaveHero = document.getElementById('btn-save-hero');
-    if(btnSaveHero) {
+    if (btnSaveHero) {
         btnSaveHero.addEventListener('click', async () => {
             // 1. Actualizamos la memoria (cmsData) con lo que hay en los inputs
             cmsData.store_name = storeNameInput.value;
@@ -1452,11 +1601,11 @@ document.addEventListener('DOMContentLoaded', () => {
             cmsData.catalog_title = catalogTitleInput.value;
             cmsData.hero.title = heroTitleInput.value;
             cmsData.hero.text = heroTextInput.value;
-            
+
             // Solo actualizamos imágenes si hay nuevas o ya existían
-            if(heroImageBase64) cmsData.hero.img = heroImageBase64;
-            if(heroBgBase64) cmsData.hero.bg_img = heroBgBase64;
-            if(storeLogoBase64) cmsData.store_logo = storeLogoBase64;
+            if (heroImageBase64) cmsData.hero.img = heroImageBase64;
+            if (heroBgBase64) cmsData.hero.bg_img = heroBgBase64;
+            if (storeLogoBase64) cmsData.store_logo = storeLogoBase64;
 
             // 2. Llamamos a la función maestra para guardar TODO
             await saveCMSData();
@@ -1469,7 +1618,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Función auxiliar para logo
     function updateDashboardLogo(name) {
         const logoLink = document.querySelector('.sidebar-header .logo'); // Selector ajustado
-        if(!logoLink) return;
+        if (!logoLink) return;
 
         // Si hay un logo gráfico en memoria, lo mostramos
         const logoUrl = storeLogoBase64 || cmsData.store_logo;
@@ -1479,7 +1628,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const half = Math.ceil(name.length / 2);
             const part1 = name.slice(0, half);
             const part2 = name.slice(half);
-            
+
             // Insertamos imagen antes del texto
             logoLink.innerHTML = `
                 <img src="${logoUrl}" style="height: 35px; width: auto; margin-right: 8px; vertical-align: middle;">
@@ -1506,18 +1655,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Función de renderizado del Carrusel (Con lógica inteligente de "Todos")
     function renderCMSCarousel() {
         const tbody = document.getElementById('cms-carousel-table-body');
-        if(!tbody) return;
-        
+        if (!tbody) return;
+
         tbody.innerHTML = '';
-        
+
         // 1. Obtener valores de los filtros
         const searchTerm = cmsCarouselSearch ? cmsCarouselSearch.value.toLowerCase() : '';
         const catFilter = cmsCarouselCatFilter ? cmsCarouselCatFilter.value : 'all';
 
         // 2. Filtrar productos
         const filteredProducts = productsDB.filter(prod => {
-            const matchText = prod.name.toLowerCase().includes(searchTerm) || 
-                            prod.category.toLowerCase().includes(searchTerm);
+            const matchText = prod.name.toLowerCase().includes(searchTerm) ||
+                prod.category.toLowerCase().includes(searchTerm);
             const matchCat = catFilter === 'all' || prod.category === catFilter;
             return matchText && matchCat;
         });
@@ -1527,7 +1676,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const updateMasterCheckboxState = () => {
             const masterCheck = document.getElementById('cms-carousel-select-all');
             const allVisibleChecks = tbody.querySelectorAll('.carousel-check');
-            
+
             if (masterCheck) {
                 if (allVisibleChecks.length > 0) {
                     // Si TODOS los visibles están checked, marcamos el maestro. Si falta uno, lo desmarcamos.
@@ -1542,9 +1691,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         filteredProducts.forEach(prod => {
             if (!Array.isArray(cmsData.carousel)) cmsData.carousel = [];
-            
+
             const isChecked = cmsData.carousel.includes(prod.id) ? 'checked' : '';
-            
+
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>
@@ -1563,7 +1712,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const checkbox = tr.querySelector('.carousel-check');
             checkbox.addEventListener('change', (e) => {
                 const id = parseInt(e.target.value);
-                
+
                 // Actualizar memoria
                 if (e.target.checked) {
                     if (!cmsData.carousel.includes(id)) cmsData.carousel.push(id);
@@ -1578,7 +1727,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tbody.appendChild(tr);
         });
 
-        if(filteredProducts.length === 0) {
+        if (filteredProducts.length === 0) {
             tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 20px; color: #999;">No se encontraron productos.</td></tr>';
         }
 
@@ -1598,8 +1747,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const catFilter = cmsCarouselCatFilter ? cmsCarouselCatFilter.value : 'all';
 
             const visibleProducts = productsDB.filter(prod => {
-                const matchText = prod.name.toLowerCase().includes(searchTerm) || 
-                                prod.category.toLowerCase().includes(searchTerm);
+                const matchText = prod.name.toLowerCase().includes(searchTerm) ||
+                    prod.category.toLowerCase().includes(searchTerm);
                 const matchCat = catFilter === 'all' || prod.category === catFilter;
                 return matchText && matchCat;
             });
@@ -1621,7 +1770,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 3. Volvemos a pintar la tabla para ver los cambios visualmente
             renderCMSCarousel();
-            
+
             // Truco visual: Mantener el checkbox maestro marcado si acabamos de marcar todo
             // (renderCMSCarousel podría resetearlo visualmente, así que lo forzamos aquí)
             carouselSelectAll.checked = isChecked;
@@ -1629,13 +1778,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- EVENTO DEL BUSCADOR ---
-    if(cmsCarouselSearch) {
+    if (cmsCarouselSearch) {
         cmsCarouselSearch.addEventListener('keyup', (e) => {
             renderCMSCarousel(e.target.value);
         });
     }
 
-    if(cmsCarouselCatFilter) {
+    if (cmsCarouselCatFilter) {
         cmsCarouselCatFilter.addEventListener('change', () => {
             renderCMSCarousel();
         });
@@ -1643,15 +1792,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- BOTÓN GUARDAR (CORREGIDO) ---
     const btnSaveCarousel = document.getElementById('btn-save-carousel');
-    if(btnSaveCarousel){
+    if (btnSaveCarousel) {
         btnSaveCarousel.addEventListener('click', async () => {
-            
+
             // ¡IMPORTANTE! 
             // Ya NO usamos 'querySelectorAll' aquí. 
             // Confiamos en 'cmsData.carousel' que ya se actualizó automáticamente arriba.
-            
+
             await saveCMSData();
-            
+
             successMsgElement.innerText = "Carrusel de productos actualizado correctamente.";
             successModal.classList.add('active');
         });
@@ -1698,7 +1847,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     function renderCMSColors() {
         const container = document.getElementById('dynamic-colors-container');
-        
+
         // PROTECCIÓN: Si no encuentra el div en el HTML, no hace nada (evita el error)
         if (!container) {
             console.error("Error: No se encontró el div 'dynamic-colors-container' en el HTML.");
@@ -1733,7 +1882,7 @@ document.addEventListener('DOMContentLoaded', () => {
             input.addEventListener('input', (e) => {
                 const varName = e.target.getAttribute('data-var');
                 const newVal = e.target.value;
-                
+
                 // 1. Actualizar texto HEX y CSS Variable
                 e.target.nextElementSibling.innerText = newVal;
                 document.documentElement.style.setProperty(varName, newVal);
@@ -1766,10 +1915,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 2. Actualizar memoria
             cmsData.colors = newColors;
-            
+
             // 3. Guardar usando la función maestra
-            await saveCMSData(); 
-            
+            await saveCMSData();
+
             if (saveSuccessModal) saveSuccessModal.classList.add('active');
         });
     }
@@ -1824,7 +1973,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.openTrackingModal = function (orderId) {
         // Nota: == permite comparar string con int por si acaso
-        const order = ordersDB.find(o => o.id == orderId); 
+        const order = ordersDB.find(o => o.id == orderId);
         if (!order) return;
 
         document.getElementById('tm-tracking-id').innerText = order.tracking || "PENDIENTE";
@@ -1845,7 +1994,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Mostrar Total en el Modal con conversión histórica
         const totalEl = document.getElementById('tm-total-price');
         let totalHTML = '$' + order.total.toFixed(2);
-        
+
         if (order.exchange_rate > 0) {
             const totalBs = (order.total * order.exchange_rate).toFixed(2);
             totalHTML += ` <span style="font-size: 0.9rem; color: var(--text-dark);">(Bs. ${totalBs})</span>`;
@@ -1854,8 +2003,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const listContainer = document.getElementById('tm-products-list');
         listContainer.innerHTML = '';
-        
-        if(order.items && order.items.length > 0) {
+
+        if (order.items && order.items.length > 0) {
             order.items.forEach(item => {
                 const div = document.createElement('div');
                 div.classList.add('tracking-item');
@@ -1871,8 +2020,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         trackModal.classList.add('active');
         btnComplete.setAttribute('data-current-order', orderId);
-        
-        if(order.status === 'Entregado') btnComplete.style.display = 'none';
+
+        if (order.status === 'Entregado') btnComplete.style.display = 'none';
         else btnComplete.style.display = 'flex';
     };
 
@@ -1897,7 +2046,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     method: 'PUT',
                     body: JSON.stringify({ status: 'Entregado' })
                 });
-                
+
                 await fetchOrders(); // Recargar tabla
                 completeOrderModal.classList.remove('active');
                 trackModal.classList.remove('active');
@@ -1951,7 +2100,7 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = 'login.html';
         });
     }
-    
+
     // Cerrar al hacer clic fuera del modal (Opcional, misma lógica que tus otros modales)
     if (logoutModal) {
         logoutModal.addEventListener('click', (e) => {
@@ -1963,13 +2112,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- HERRAMIENTA AUXILIAR: Convertir HEX a RGBA ---
     function hexToRgba(hex, alpha) {
         let c;
-        if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)){
-            c= hex.substring(1).split('');
-            if(c.length== 3){
-                c= [c[0], c[0], c[1], c[1], c[2], c[2]];
+        if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
+            c = hex.substring(1).split('');
+            if (c.length == 3) {
+                c = [c[0], c[0], c[1], c[1], c[2], c[2]];
             }
-            c= '0x'+c.join('');
-            return 'rgba('+[(c>>16)&255, (c>>8)&255, c&255].join(',')+','+alpha+')';
+            c = '0x' + c.join('');
+            return 'rgba(' + [(c >> 16) & 255, (c >> 8) & 255, c & 255].join(',') + ',' + alpha + ')';
         }
         return hex; // Si falla, retorna el original
     }
@@ -1980,7 +2129,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnSaveCurrency && inputCurrency) {
         btnSaveCurrency.addEventListener('click', async () => {
             const newRate = parseFloat(inputCurrency.value);
-            
+
             if (isNaN(newRate) || newRate <= 0) {
                 alert("Por favor ingresa una tasa válida mayor a 0.");
                 return;
@@ -1998,7 +2147,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const originalText = btnSaveCurrency.innerHTML;
             btnSaveCurrency.innerHTML = "<i class='bx bx-check'></i>";
             btnSaveCurrency.style.background = "#2E7D32";
-            
+
             setTimeout(() => {
                 btnSaveCurrency.innerHTML = originalText;
                 btnSaveCurrency.style.background = ""; // Volver al color original

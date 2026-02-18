@@ -279,6 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // 2. Renderizar Productos (Lo hacemos PRIMERO para asegurar que se vean)
+            // 2. Renderizar Productos
             products = productsData.map(p => ({
                 id: p.id,
                 name: p.name,
@@ -286,7 +287,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 stock: parseInt(p.stock),
                 category: p.category,
                 desc: p.description,
-                img: p.img_url || "https://via.placeholder.com/150"
+                img: p.img_url || "https://via.placeholder.com/150",
+                
+                // --- AGREGAR ESTOS 3 CAMPOS NUEVOS ---
+                has_discount: p.has_discount,
+                discount_percent: p.discount_percent,
+                discount_ends_at: p.discount_ends_at
+                // -------------------------------------
             })).filter(p => p.stock > 0);
 
             if (typeof renderCatalog === 'function') renderCatalog(products);
@@ -432,27 +439,68 @@ document.addEventListener('DOMContentLoaded', () => {
         div.setAttribute('data-category', prod.category);
         div.setAttribute('data-name', prod.name);
 
-        // --- LÓGICA DE PRECIO DOBLE ---
-        let priceHTML = `$${prod.price.toFixed(2)}`; // Precio base en Dólares
-        
-        // Si la tasa es mayor a 0, agregamos los Bolívares
-        if (exchangeRate > 0) {
-            const priceBs = (prod.price * exchangeRate).toFixed(2);
-            // Se verá así: $10.00 / Bs. 500.00
-            priceHTML += `<span style="font-size:0.85rem; color: var(--text-gray);">/ Bs. ${priceBs}</span>`;
+        // --- LÓGICA DE PRECIOS Y DESCUENTOS ---
+        const priceWithTax = parseFloat(prod.price);
+        let priceHTML = '';
+
+        // 1. Verificar fecha y estado
+        const now = new Date();
+        const endDate = prod.discount_ends_at ? new Date(prod.discount_ends_at) : new Date(0);
+        // has_discount puede venir como 1 (int) o true (boolean)
+        const hasActiveDiscount = (prod.has_discount == 1 || prod.has_discount === true) && (prod.discount_percent > 0) && (endDate > now);
+
+        if (hasActiveDiscount) {
+            // Calcular
+            const discountVal = priceWithTax * (prod.discount_percent / 100);
+            const finalPrice = priceWithTax - discountVal;
+
+            // HTML Dólares (Tachado + Nuevo)
+            priceHTML = `
+                <div style="display:flex; flex-direction:column; align-items:flex-start; line-height: 1.2;">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <span style="text-decoration: line-through; color: #999; font-size: 0.85rem;">$${priceWithTax.toFixed(2)}</span>
+                        <span style="background:#FFEBEE; color: var(--accent-color); font-size:0.7rem; padding:1px 4px; border-radius:4px; font-weight:bold;">-${prod.discount_percent}%</span>
+                    </div>
+                    <div style="color: var(--accent-color); font-weight: bold; font-size: 1.15rem;">$${finalPrice.toFixed(2)}</div>
+            `;
+
+            // HTML Bolívares
+            if (exchangeRate > 0) {
+                const oldBs = (priceWithTax * exchangeRate).toFixed(2);
+                const newBs = (finalPrice * exchangeRate).toFixed(2);
+                priceHTML += `
+                    <div style="font-size: 0.8rem; color: #666; margin-top: 3px; border-top: 1px dashed #eee; width: 100%;">
+                        <span style="text-decoration:line-through; font-size:0.75rem; margin-right:4px;">Bs. ${oldBs}</span>
+                        <span style="color:#333; font-weight:600;">Bs. ${newBs}</span>
+                    </div>
+                </div>`; 
+            } else {
+                priceHTML += `</div>`; 
+            }
+
+        } else {
+            // PRECIO NORMAL
+            priceHTML = `<div style="font-weight:bold; font-size:1.1rem; color:var(--primary-color);">$${priceWithTax.toFixed(2)}</div>`;
+            if (exchangeRate > 0) {
+                const priceBs = (priceWithTax * exchangeRate).toFixed(2);
+                priceHTML += `<div style="font-size:0.85rem; color:#666;">Bs. ${priceBs}</div>`;
+            }
         }
-        // ------------------------------
+        // ----------------------------------------------------
 
         div.innerHTML = `
             <div class="img-wrapper">
-                <img src="${prod.img}" alt="${prod.name}">
+                <img src="${prod.img}" alt="${prod.name}" onerror="this.src='https://via.placeholder.com/150'">
+                ${hasActiveDiscount ? '<span style="position:absolute; top:10px; right:10px; background: var(--accent-color); color:white; padding:3px 8px; border-radius:4px; font-size:0.75rem; font-weight:bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">OFERTA</span>' : ''}
             </div>
             <div class="card-details">
                 <p class="cat-label">${prod.category}</p>
-                <h3>${prod.name}</h3>
-                <div class="price-row">
-                    <span class="price">${priceHTML}</span>
+                <h3 style="margin: 5px 0;">${prod.name}</h3>
+                
+                <div class="price-row" style="min-height: 55px; align-items: center; display:flex;">
+                    ${priceHTML}
                 </div>
+                
                 <button class="add-btn" data-id="${prod.id}">Añadir <i class='bx bx-cart-add'></i></button>
             </div>
         `;
@@ -474,24 +522,66 @@ document.addEventListener('DOMContentLoaded', () => {
             pmCategory.innerText = data.category;
             pmTitle.innerText = data.name;
 
-            let priceHTML = `$${data.price.toFixed(2)}`;
-            
-            if (exchangeRate > 0) {
-                const priceBs = (data.price * exchangeRate).toFixed(2);
-                priceHTML += `<span style="color: var(--text-gray); font-size: 1rem; font-weight: normal;"> / Bs. ${priceBs}</span>`;
+            // --- LÓGICA DE PRECIOS VISUAL ---
+            const priceWithTax = parseFloat(data.price);
+            let priceHTML = '';
+            let finalPriceToCart = priceWithTax; // Variable para el carrito
+
+            const now = new Date();
+            const endDate = data.discount_ends_at ? new Date(data.discount_ends_at) : new Date(0);
+            const hasActiveDiscount = (data.has_discount == 1 || data.has_discount === true) && (data.discount_percent > 0) && (endDate > now);
+
+            if (hasActiveDiscount) {
+                // Calcular descuento
+                const discountVal = priceWithTax * (data.discount_percent / 100);
+                const finalPrice = priceWithTax - discountVal;
+                
+                // Actualizamos la variable que usaremos para el carrito
+                finalPriceToCart = finalPrice; 
+
+                priceHTML = `
+                    <div style="display:flex; align-items:center; gap: 10px; flex-wrap:wrap;">
+                        <span style="font-size: 1.5rem; font-weight: bold; color: #E53935;">$${finalPrice.toFixed(2)}</span>
+                        <span style="text-decoration: line-through; color: #999; font-size: 1rem;">$${priceWithTax.toFixed(2)}</span>
+                        <span style="background:#FFEBEE; color:#C62828; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:0.8rem;">AHORRAS ${data.discount_percent}%</span>
+                    </div>
+                `;
+
+                if (exchangeRate > 0) {
+                    const oldBs = (priceWithTax * exchangeRate).toFixed(2);
+                    const newBs = (finalPrice * exchangeRate).toFixed(2);
+                    priceHTML += `
+                        <div style="margin-top:5px; color:#555; font-size:0.95rem;">
+                            <span style="font-weight:600;">Bs. ${newBs}</span> 
+                            <span style="text-decoration:line-through; font-size:0.8rem; color:#999; margin-left:5px;">(Bs. ${oldBs})</span>
+                        </div>
+                    `;
+                }
+            } else {
+                // Precio Normal
+                priceHTML = `<span style="font-size: 1.5rem; font-weight: bold; color: var(--primary-color);">$${priceWithTax.toFixed(2)}</span>`;
+                if (exchangeRate > 0) {
+                    const priceBs = (priceWithTax * exchangeRate).toFixed(2);
+                    priceHTML += `<span style="font-size: 1rem; color: #666; margin-left: 10px;">/ Bs. ${priceBs}</span>`;
+                }
             }
 
             pmPrice.innerHTML = priceHTML;
             pmStock.innerText = data.stock;
             pmDesc.innerText = data.desc || "Sin descripción.";
 
+            // Clonar botón para limpiar eventos anteriores y asignar el nuevo
             const newBtn = pmAddBtn.cloneNode(true);
             pmAddBtn.parentNode.replaceChild(newBtn, pmAddBtn);
+            
             newBtn.addEventListener('click', () => {
-                addToCart(data);
+                // AQUÍ USAMOS EL PRECIO CALCULADO (finalPriceToCart)
+                const productForCart = { ...data, price: finalPriceToCart };
+                
+                addToCart(productForCart);
                 productModalOverlay.classList.remove('active');
-                cartSidebar.classList.add('active');
-                cartOverlay.classList.add('active');
+                if(cartSidebar) cartSidebar.classList.add('active');
+                if(cartOverlay) cartOverlay.classList.add('active');
             });
 
             productModalOverlay.classList.add('active');
@@ -501,13 +591,42 @@ document.addEventListener('DOMContentLoaded', () => {
     function attachAddEvents() {
         const btns = document.querySelectorAll('.add-btn');
         btns.forEach(btn => {
+            // Evitar duplicar eventos
             if (btn.classList.contains('event-added')) return;
+            
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const id = parseInt(btn.getAttribute('data-id'));
                 const product = products.find(p => p.id === id);
+
                 if (product) {
-                    addToCart(product);
+                    // --- CALCULAR PRECIO FINAL ANTES DE ENVIAR AL CARRITO ---
+                    const basePrice = parseFloat(product.price);
+                    let finalPrice = basePrice;
+
+                    const now = new Date();
+                    const endDate = product.discount_ends_at ? new Date(product.discount_ends_at) : new Date(0);
+                    
+                    // Verificamos si el descuento es válido
+                    const hasDiscount = (product.has_discount == 1 || product.has_discount === true) && 
+                                        (product.discount_percent > 0) && 
+                                        (endDate > now);
+
+                    if (hasDiscount) {
+                        // Aplicamos la matemática del descuento
+                        finalPrice = basePrice - (basePrice * (product.discount_percent / 100));
+                    }
+
+                    // CREAMOS UNA COPIA DEL PRODUCTO CON EL PRECIO NUEVO
+                    // Usamos { ...product } para copiar todas las propiedades y sobrescribimos 'price'
+                    const productToAdd = { 
+                        ...product, 
+                        price: finalPrice 
+                    };
+
+                    addToCart(productToAdd);
+                    // --------------------------------------------------------
+
                     if (cartSidebar) cartSidebar.classList.add('active');
                     if (cartOverlay) cartOverlay.classList.add('active');
                 }
@@ -518,8 +637,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function addToCart(product) {
         const existingItem = cart.find(item => item.id === product.id);
+        
         if (existingItem) {
             existingItem.quantity++;
+            // ACTUALIZAR PRECIO: Si agregamos el mismo producto pero ahora tiene un precio diferente (oferta)
+            // actualizamos el precio del item en el carrito para que sea el más reciente.
+            existingItem.price = product.price; 
         } else {
             cart.push({ ...product, quantity: 1 });
         }
